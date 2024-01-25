@@ -1,0 +1,16 @@
+__pycache__
+venv_whisper
+/batch
+/transcripts
+EmpLawMatters_podcast_transcripts
+log*.txt
+README getting this to work was hard.txt
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
