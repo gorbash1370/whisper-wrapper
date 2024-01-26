@@ -4,7 +4,6 @@ Requirements:
 * main.py, whisper_trasncription.py, config.py in same directory
 """
 
-
 ############# MANUAL SECTION 1 ####################
 """ Specify directory path containing audio files to be transcribed. 
 Can be relative (i.e. "folder_name/") to reference root directory, or absolute if script isn't being run in same directory as audio files.
@@ -18,7 +17,7 @@ path_for_transcripts = "transcripts/"
 """Specify target audio file format
 Requirement: all files in processing batch must have same file extension / file type."""
 audio_format = ".mp3" # include the .
-# TEST what happens with different format: look at whisper docuemtnation, does it specify just mp3
+# TEST what happens with different format: look at whisper documentation, does it specify just mp3
 
 """Choose transcription model"""
 # Whisper Model Summary:
@@ -45,3 +44,45 @@ An ideal filename will be in this format:
 [S]eries[#][E]pisode[#] - Title.audio_format
 S6E11 - Health and Safety (with Gus Baker).mp3
 """
+
+############# MANUAL SECTION 2 : POPULATE TRANSCRIPT HEADER ####################
+
+# Populate 'group' string fields for the transcript file 'header' (so these are the same for all the videos)
+audio_info_batch = [
+    {
+        "participants" : [
+        {"name": "Daniel Barnett", "role": "Host & Speaker"},
+        # {""name": "Unknown", "role": "Interviewer"},
+        ]
+    },
+    {
+        "video_content" : [
+        {"type" : "QandA"}, # talk, interview, QandA
+        {"topic" : "UK Employment Law"},
+        {"series" : "Employment Law Matters"},
+        {"format" : "Podcast"}
+        ] # Podcast, YouTube
+    },
+    {
+        "transcript_type" : [
+        {"producer" : "whisper"},
+        {"model" : model_chosen}
+        ]
+    },
+]
+
+# Populate information which varies per audio file
+# audio_file_info = [
+#     {
+#     "audio_file_num" : index, # don't need this, from index
+#     "audio_title": filename,
+#     "date" : "Unknown", # ref = {audio_file_info[index-1]['date']}
+#     "series_num" : "S6", # {audio_file_info[index-1]['series_num']}
+#     "episode_num" : "E7", # ref = {audio_file_info[index-1]['episode_num']}
+    
+#     "speakers" : [
+#         {"name": "Daniel Barnett", "role": "Host"} # Host, Speaker, Interviewer
+#         {"name": "Unknown", "role": "Interviewer"},
+#        ]
+#     }
+# ]
