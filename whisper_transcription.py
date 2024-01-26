@@ -178,7 +178,7 @@ def create_header(audio_info_batch, index, audio_file, logfilename):
         series, episode = extract_series_episode(audio_file)
         # construct individualised header for each file
         header_parts = [
-        f"---\n" # delimiter for AI processing
+        "---", # delimiter for AI processing
         f"Filename: {audio_file}",
         f"Content creation date: Unknown",
         f"Series: {audio_info_batch[1]['video_content'][2]['series']}",
@@ -192,7 +192,7 @@ def create_header(audio_info_batch, index, audio_file, logfilename):
         f"Transcription Model: {audio_info_batch[2]['transcript_type'][1]['model']}",
         f"Series Batch process order: {index}"
         ]
-        header = "\n".join(header_parts) + "\n"
+        header = "\n".join(header_parts) + "\n\n"
         
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         msg_header_success = (f"{formatted_timestamp} - Header construction successful.\n")
@@ -254,15 +254,22 @@ def insert_newlines(text, word_interval):
 def format_transcript(raw_transcript, header):
     """ Writes the combined header + transcript + line numbers to file.
     NEED a try except block with error log"""
+
+    print(f"Header at the start of the function looks like this:\n{header}")
+        
     # Insert newlines every word_interval
     linebreak_transcript = insert_newlines(raw_transcript, word_interval)
 
     # Combine header and transcript
-    formatted_transcript = f"{header}\n\n{linebreak_transcript}\n---\n"
+    end_delimiter = "\n---\n"
+    print(f"Header now looks like this:\n{header}")
+    formatted_transcript = header+linebreak_transcript+end_delimiter
+    print(f"The transcript looks like this:\n\n{formatted_transcript}")
 
     # Insert line numbers
     lines = formatted_transcript.splitlines()
     formatted_transcript = "\n".join(f"{i+1}: {line}" for i, line in enumerate(lines))
+    print(f"The transcript looks like this:\n\n{formatted_transcript}")
 
     formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
     success_msg_formatting = (f"{formatted_timestamp} - Raw transcript formatted successfully.\n")
@@ -312,7 +319,7 @@ def master_call_single(model_chosen): # do all variables just get put in here?
      
 def master_call_loop(mp3_filenames, model):
     for index, audio_file in enumerate(mp3_filenames, start=1):
-        header = create_header(audio_info_batch, index, audio_file, logfilename) # returns: header
+        header, audio_file = create_header(audio_info_batch, index, audio_file, logfilename) # returns: header
         raw_transcript = transcribe(model, audio_file) # returns: raw_transcript
         # insert_newlines(text, word_interval)
         formatted_transcript = format_transcript(raw_transcript, header) # returns: formatted_transcript, takes raw_transcript, header
