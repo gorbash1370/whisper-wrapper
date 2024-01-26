@@ -1,8 +1,15 @@
-""" Entry point for whisper_transcription.py
-Requirements: 
-* dependencies listed in requirements.txt (TAKE OUT JUPYTER)
-* main.py, whisper_trasncription.py, config.py in same directory
-"""
+from whisper_transcription import setup_log_file, pre_processing, load_model, create_header, load_model, transcribe,format_transcript, save_transcript
+from whisper_transcription import master_call_single, master_call_loop
+
+# transcribe # returns: raw_transcript
+# insert_newlines(text, word_interval)
+# format_transcript # returns: formatted_transcript
+# save_transcript
+# create_header # returns: header,
+# load_model() # returns: model
+
+
+""" Entry point for whisper_transcription.py """
 
 ############# MANUAL SECTION 1 ####################
 """ Specify directory path containing audio files to be transcribed. 
@@ -29,7 +36,7 @@ audio_format = ".mp3" # include the .
 
 model_options = ["tiny.en", "base.en", "small.en", "medium.en", "large", "tiny", "base", "small", "medium"] # non .en are multilingual. en's best for English
 
-model_chosen = model_options[2]
+model_chosen = model_options[0]
 
 """Whisper returns transcripts which are one long string of text with no linebreaks or speaker labels, therefore:
 Specify the interval of words at which to insert a newline in transcript, or
@@ -86,3 +93,8 @@ audio_info_batch = [
 #        ]
 #     }
 # ]
+
+#%%
+master_call_single()
+#%%
+master_call_loop()

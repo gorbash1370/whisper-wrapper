@@ -5,22 +5,24 @@ import time
 from datetime import datetime as dt
 import whisper
 
-from main import path_to_audio, path_for_transcripts, audio_format, word_interval, model_chosen, model_options, audio_info_batch
+from main import path_to_audio, path_for_transcripts, word_interval, audio_format, model_chosen, model_options, audio_info_batch
 
 """ gorbash1370 Intro 
 This script automates the process of transcribing audio files using a local Whisper model from OpenAI. It includes functionality for handling multiple files, adding custom headers to the transcripts, and logging the transcription process.
 
-It requires:
-filenames should contain title of podcast or audio track
-all files with the specified extension in the input_path directory will be attempted to be procesed.
+Notes:
+* filenames should contain title of podcast or audio track
+* Script attempts to process ALL files with the specified extension in the input path directory.
 
-!! TO DO: Extract series and episode number from filename
-It can be further automated if the filename contains information (series and episode number) in a standardised way.
+!! TO DO: Do something with the True Falses? like track the flag?
+!! TO DO: a time estimator? would have to audio file length
+!! TO DO: dependencies listed in requirements.txt (TAKE OUT JUPYTER)
+!! TO DO: main.py, whisper_trasncription.py, config.py in same directory
 
 Last code update 24 01 26
 """
 
-logfilename = ""
+logfilename = "" # Instanciates global variable
 
 #%%
 ########################## Pre-Processing #########################
@@ -34,7 +36,6 @@ def setup_log_file():
         if not os.path.exists(logfilename):
             with open(logfilename, "a") as log_file:
                 log_file.write(f"{formatted_timestamp} - Log File Setup - Successful.\n")
-            pre_processing()
             return True
 
     except (FileExistsError, OSError, UnicodeEncodeError) as e:
@@ -42,16 +43,9 @@ def setup_log_file():
             print(error)
             return False 
 
-# Test setup_log_file()
-setup_success = setup_log_file()
-if setup_success:
-    print(f"Log file set up successfully: {logfilename}")
-else:
-    print("Failed to set up log file.")
-
 #%%
 def pre_processing(
-        path_to_audio, path_for_transcripts, logfilename, audio_format, word_interval, model_options, model_chosen):
+        path_to_audio, path_for_transcripts, audio_format, word_interval, model_options, model_chosen, logfilename):
     
     """COMPLETE ME."""
 
@@ -63,7 +57,7 @@ def pre_processing(
         with open(logfilename, "a") as log_file:
             log_file.write(f"{formatted_timestamp} - {error_msg}")
             print(error_msg)
-            return False # return error?
+            return False 
     else: 
         success_msg = f"Pre Processing Checks - Input directory check successful.\n"
         with open(logfilename, "a") as log_file:
@@ -126,21 +120,25 @@ def pre_processing(
 
     print(f"Please make sure you are happy with this summary of processing:\n{summary}\n Abort if any parameters are incorrect. A large batch of files and-or a using the largest models will take significant time and compute.")
     time.sleep(5)
+    return mp3_filenames, model_chosen
 
+#%%
 ########################## Load model ###########################
-                
-def load_model(): # is there a time delay here? to warn about?
+            
+def load_model(model_chosen): 
     """Load model"""
     try:
         model = whisper.load_model(model_chosen)
-        transcribe(model)
+        # transcribe(model)
+        return model
 
     except Exception as e: # REFINE ME
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         error_msg_load_model = (f"{formatted_timestamp} - Model load unsuccessful - {e}")
         print(error_msg_load_model)
         with open(logfilename, "a") as log_file:
-            log_file.write(f"{error_msg_load_model}\n")
+            log_file.write(f"{error_msg_load_model}\n")                
+
 
 
 
@@ -171,7 +169,7 @@ def extract_series_episode(
     return series, episode
 
 
-def create_header(series, episode, audio_info_batch, index, audio_file):
+def create_header(audio_info_batch, index, audio_file):
     """COMPLETE ME"""
     # for index, audio_file in enumerate(mp3_filenames, start=1):
     try:
@@ -179,6 +177,7 @@ def create_header(series, episode, audio_info_batch, index, audio_file):
         series, episode = extract_series_episode(audio_file)
         # construct individualised header for each file
         header_parts = [
+        f"---" # delimiter for AI processing
         f"Filename: {audio_file}",
         f"Content creation date: Unknown",
         f"Series: {{audio_info_batch[1]['video_content'][2]['series']}}",
@@ -192,7 +191,7 @@ def create_header(series, episode, audio_info_batch, index, audio_file):
         f"Transcription Model: {audio_info_batch[2]['transcript_type'][1]['model']}",
         f"Series Batch process order: {index}"
         ]
-        header = "\n".join(header_parts) + "\n\n"
+        header = "\n".join(header_parts) + "\n"
         
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         msg_header_success = (f"{formatted_timestamp} - Header construction successful.")
@@ -210,11 +209,12 @@ def create_header(series, episode, audio_info_batch, index, audio_file):
             log_file.write(f"{msg_header_error}\n")
 
 
-########################## TRANSCRIPTION ################################
 #%%
+########################## TRANSCRIPTION ################################
 
 def transcribe(model, audio_file):
-    # whisper transcription
+    """COMPLETE ME"""
+        # whisper transcription
     try:
         path = os.path.join(path_to_audio, audio_file)
         result = model.transcribe(path)
@@ -228,7 +228,7 @@ def transcribe(model, audio_file):
        
         return raw_transcript
 
-    except (FileNotFoundError, RuntimeError, Exception) as e: # CalledProcessError
+    except (FileNotFoundError, RuntimeError, Exception) as e: # CalledProcessError?
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         error_msg_transcription = (f"{formatted_timestamp} - Whisper transcription error - {e}")
         with open(logfilename, "a") as log_file:
@@ -236,7 +236,8 @@ def transcribe(model, audio_file):
 
 #%%
 ######################### FORMATTING & OUTPUT #################################
-            
+
+# helper function to move            
 def insert_newlines(text, word_interval):
     """Whisper transcripts are one long line of text. This function will insert a newline character at the end of every {interval} i.e. 10 words. If 0 was chosen, no newlines will be inserted """
     if word_interval == 0:
@@ -251,13 +252,13 @@ def insert_newlines(text, word_interval):
 def format_transcript(raw_transcript, header):
     """ Writes the combined header + transcript + line numbers to file.
     NEED a try except block with error log"""
-    # insert newlines every word_interval
+    # Insert newlines every word_interval
     linebreak_transcript = insert_newlines(raw_transcript, word_interval)
 
-    # combine header and transcript
-    formatted_transcript = header + "\n" + linebreak_transcript 
+    # Combine header and transcript
+    formatted_transcript = header + "\n\n" + linebreak_transcript + "---"
 
-    # insert line numbers
+    # Insert line numbers
     lines = formatted_transcript.splitlines()
     formatted_transcript = "\n".join(f"{i+1}: {line}" for i, line in enumerate(lines))
 
@@ -295,19 +296,23 @@ def save_transcript(formatted_transcript, audio_file):
         msg_output_file_write_error = (f"{formatted_timestamp} - Whisper transcription error - {e}")
         with open(logfilename, "a") as log_file:
             log_file.write({formatted_timestamp}+" - "+{msg_output_file_write_error})
+ 
 
-           
 
+#%% 
+################### CALL SEQUENCE ########################
 
-#%%
-def master_function():
+def master_call_single(): # do all variables just get put in here?
     setup_log_file()
-    pre_processing(path_to_audio, path_for_transcripts, logfilename, audio_format, word_interval, model_options, model_chosen)
-    load_model()
+    pre_processing_result = pre_processing(path_to_audio, path_for_transcripts, audio_format, word_interval, model_options, model_chosen) # returns: mp3_filenames & model_chosen, also takes: logfilename
+    # not needed? mp3_filenames, model_chosen = pre_processing_result
+    model = load_model(model_chosen) # returns: model, takes: model_chosen
+ 
+def master_call_loop(mp3_filenames, model):
     for index, audio_file in enumerate(mp3_filenames, start=1):
-        create_header(series, episode, audio_info_batch, index, audio_file)
-        load_model()
-        transcribe(model, audio_file)
-        insert_newlines(text, word_interval)
-        format_transcript(raw_transcript, header)
-        save_transcript(formatted_transcript, audio_file)
+        header = create_header(audio_info_batch, index, audio_file) # returns: header
+        model = load_model(model_chosen) # returns: model, takes: model_chosen
+        raw_transcript = transcribe(model, audio_file) # returns: raw_transcript
+        # insert_newlines(text, word_interval)
+        formatted_transcript = format_transcript(raw_transcript, header) # returns: formatted_transcript, takes raw_transcript, header
+        save_transcript(formatted_transcript, audio_file) # takes: formatted_transcript

@@ -1,4 +1,13 @@
 # %%
+# Test setup_log_file()
+setup_success = setup_log_file()
+if setup_success:
+    print(f"Log file set up successfully: {logfilename}")
+else:
+    print("Failed to set up log file.")
+
+
+#%%
 # Suggested rework of pre_processing()
 
 def pre_processing(path_to_audio, path_for_transcripts, logfilename, audio_format, word_interval, model_chosen, model_options):
