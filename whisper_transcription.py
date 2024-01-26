@@ -14,6 +14,9 @@ Notes:
 * filenames should contain title of podcast or audio track
 * Script attempts to process ALL files with the specified extension in the input path directory.
 
+
+!! Fix the series count in header
+!! do the move files to done directory
 !! TO DO: change the mp3 variable to format agnostic name
 !! TO DO: Do something with the True Falses? like track the flag?
 !! TO DO: a time estimator? would have to audio file length
@@ -254,8 +257,6 @@ def insert_newlines(text, word_interval):
 def format_transcript(raw_transcript, header):
     """ Writes the combined header + transcript + line numbers to file.
     NEED a try except block with error log"""
-
-    print(f"Header at the start of the function looks like this:\n{header}")
         
     # Insert newlines every word_interval
     linebreak_transcript = insert_newlines(raw_transcript, word_interval)
@@ -264,13 +265,11 @@ def format_transcript(raw_transcript, header):
     end_delimiter = "\n---\n"
     print(f"Header now looks like this:\n{header}")
     formatted_transcript = header+linebreak_transcript+end_delimiter
-    print(f"The transcript looks like this:\n\n{formatted_transcript}")
-
+    
     # Insert line numbers
     lines = formatted_transcript.splitlines()
     formatted_transcript = "\n".join(f"{i+1}: {line}" for i, line in enumerate(lines))
-    print(f"The transcript looks like this:\n\n{formatted_transcript}")
-
+    
     formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
     success_msg_formatting = (f"{formatted_timestamp} - Raw transcript formatted successfully.\n")
     print(success_msg_formatting)

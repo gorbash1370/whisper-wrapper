@@ -24,7 +24,7 @@ audio_format = ".mp3" # include the .
 
 model_options = ["tiny.en", "base.en", "small.en", "medium.en", "large", "tiny", "base", "small", "medium"] # non .en are multilingual. en's best for English
 
-model_chosen = model_options[2]
+model_chosen = model_options[1]
 
 """Whisper returns transcripts which are one long string of text with no linebreaks or speaker labels, therefore:
 Specify the interval of words at which to insert a newline in transcript, or
