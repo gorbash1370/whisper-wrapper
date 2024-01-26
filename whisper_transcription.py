@@ -61,7 +61,7 @@ def pre_processing(
             print(error_msg)
             return False 
     else: 
-        success_msg = f"Pre Processing Checks - Input directory check successful.\n"
+        success_msg = f"Pre Processing Checks - Input directory check successful.\n\n"
         with open(logfilename, "a") as log_file:
             log_file.write(f"{formatted_timestamp} - {success_msg}")
         print(success_msg)
@@ -80,7 +80,7 @@ def pre_processing(
         file_count = len(mp3_filenames)
         
         pretty_mp3_filenames = '\n'.join(mp3_filenames)
-        summary_files = f"Directory contains {file_count} {audio_format} files:\n{pretty_mp3_filenames}\n."
+        summary_files = f"Directory contains {file_count} {audio_format} files:\n{pretty_mp3_filenames}\n"
         print(summary_files)
             
         with open(logfilename, "a") as log_file:
@@ -118,7 +118,7 @@ def pre_processing(
 
     # Need to check that this will ONLY run if all the prior conditions are successful - do i need to set a flag that exits the program if any false is returned?
     with open(logfilename, "a") as log_file:
-            summary = f"{formatted_timestamp} - Summary of transcription parameters \n- Input Path: {path_to_audio} \n- Output Path: {path_for_transcripts} \n- Audio format: {audio_format} \n- Number of {audio_format} files: {file_count} \n- Transcription Model: {model_chosen} \n- Newline interval: {word_interval} words.\n"
+            summary = f"{formatted_timestamp} - Summary of transcription parameters \n- Input Path: {path_to_audio} \n- Output Path: {path_for_transcripts} \n- Audio format: {audio_format} \n- Number of {audio_format} files: {file_count} \n- Transcription Model: {model_chosen} \n- Newline interval: {word_interval} words.\n\n"
             log_file.write(summary)
 
     print(f"Please make sure you are happy with this summary of processing:\n{summary}\n Abort if any parameters are incorrect. A large batch of files and-or a using the largest models will take significant time and compute.")
@@ -141,8 +141,6 @@ def load_model(model_chosen):
         print(error_msg_load_model)
         with open(logfilename, "a") as log_file:
             log_file.write(f"{error_msg_load_model}\n")                
-
-
 
 
 #%%
@@ -180,11 +178,11 @@ def create_header(audio_info_batch, index, audio_file, logfilename):
         series, episode = extract_series_episode(audio_file)
         # construct individualised header for each file
         header_parts = [
-        f"---" # delimiter for AI processing
+        f"---\n" # delimiter for AI processing
         f"Filename: {audio_file}",
         f"Content creation date: Unknown",
-        f"Series: {{audio_info_batch[1]['video_content'][2]['series']}}",
-        f"Series#:{series} ",
+        f"Series: {audio_info_batch[1]['video_content'][2]['series']}",
+        f"Series#: {series} ",
         f"Episode#: {episode} ",
         f"Format: {audio_info_batch[1]['video_content'][3]['format']}", 
         f"Topic: {audio_info_batch[1]['video_content'][1]['topic']}",
@@ -197,10 +195,10 @@ def create_header(audio_info_batch, index, audio_file, logfilename):
         header = "\n".join(header_parts) + "\n"
         
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
-        msg_header_success = (f"{formatted_timestamp} - Header construction successful.")
+        msg_header_success = (f"{formatted_timestamp} - Header construction successful.\n")
         print(msg_header_success)
         print(header)
-        with open(logfilename, "a"):
+        with open(logfilename, "a") as log_file:
             log_file.write(f"{msg_header_success}\n")
         
         return header, audio_file
@@ -260,7 +258,7 @@ def format_transcript(raw_transcript, header):
     linebreak_transcript = insert_newlines(raw_transcript, word_interval)
 
     # Combine header and transcript
-    formatted_transcript = header + "\n\n" + linebreak_transcript + "---"
+    formatted_transcript = f"{header}\n\n{linebreak_transcript}\n---\n"
 
     # Insert line numbers
     lines = formatted_transcript.splitlines()
@@ -314,7 +312,7 @@ def master_call_single(model_chosen): # do all variables just get put in here?
      
 def master_call_loop(mp3_filenames, model):
     for index, audio_file in enumerate(mp3_filenames, start=1):
-        header = create_header(audio_info_batch, index, audio_file) # returns: header
+        header = create_header(audio_info_batch, index, audio_file, logfilename) # returns: header
         raw_transcript = transcribe(model, audio_file) # returns: raw_transcript
         # insert_newlines(text, word_interval)
         formatted_transcript = format_transcript(raw_transcript, header) # returns: formatted_transcript, takes raw_transcript, header
