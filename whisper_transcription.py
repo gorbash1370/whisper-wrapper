@@ -1,13 +1,16 @@
 #%%
 import os
-import whisper
+import re
+import time
 from datetime import datetime as dt
+import whisper
+
+from main import path_to_audio, path_for_transcripts, audio_format, word_interval, model_chosen, model_options 
 
 """ gorbash1370 Intro 
-This script is designed to automate the process of transcribing audio files using a local Whisper model from OpenAI. It includes functionality for handling multiple files, adding custom headers to the transcripts, and logging the transcription process.
+This script automates the process of transcribing audio files using a local Whisper model from OpenAI. It includes functionality for handling multiple files, adding custom headers to the transcripts, and logging the transcription process.
 
 It requires:
-currently assumes mp3
 filenames should contain title of podcast or audio track
 all files with the specified extension in the input_path directory will be attempted to be procesed.
 
@@ -17,60 +20,113 @@ It can be further automated if the filename contains information (series and epi
 Last code update 24 01 24
 """
 #%%
-############# MANUAL SECTION 1 ####################
+def load_model(): # is there a time delay here? to warn about?
+    model = whisper.load_model(model_chosen) 
 
-# NB: Specify full absolute input_path if not runnings script in directory containing audio files to transcribe
-
-# Specify directory path containing audio files. Can be absolute if required
-input_path = "batch/" 
-
-# Specify transcript output folder / path, will be created if doesn't exist
-output_path = "transcripts/"
-if not os.path.exists(output_path):
-    os.makedirs(output_path)
-
-# Specify target audio file format 
-audio_format = ".mp3"
-
-# Choose transcription model (see table at end for time and RAM requirements)
-# Whisper Model Summary:
-# - tiny.en: Requires ~1 GB VRAM, Speed ~32x.
-# - base.en: Requires ~1 GB VRAM, Speed ~16x.
-# - small.en: Requires ~2 GB VRAM, Speed ~6x.
-# - medium.en: Requires ~5 GB VRAM, Speed ~2x.
-# - large (Multilingual): Requires ~10 GB VRAM, Speed 1x.
-
-model_options = ["tiny.en", "base.en", "small.en", "medium.en", "large", "tiny", "base", "small", "medium"] # non .en are multilingual. en's best for English
-
-model_chosen = model_options[2]
-
-model = whisper.load_model(model_chosen) 
-
-# Specify the interval of words at which to insert a newline in transcript
-word_interval = 10  # for example, every 10 words
-
-run_date = dt.now().strftime("%Y-%m-%d")
-
+rundate = ""
 
 #%%
 ########################## Pre-Processing #########################
+def setup_log_file():
+    """Instanciates a datestamped .txt log file so activity in a single day is aggregated."""
+    run_date = dt.now().strftime("%Y-%m-%d")
+    logfilename = f"log_whisper_transcripts_{run_date}.txt"
+    if not os.path.exists(logfilename):
+        formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
+        try:
+            with open(logfilename, "a") as log_file:
+                log_file.write(f"{formatted_timestamp} - Log File Setup - Successful.\n")
+                # pre_processing(logfilename) # return True?
+        except (FileExistsError, OSError, UnicodeEncodeError) as e:
+            error = f"Error, unable to instantiate log file with name {logfilename}. The following error occurred: {e}\n"
+            print(error)
+            return False # return error?
+    else:
+        return logfilename
 
-##### Log file set-up
-formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
-with open(f"log_whisper_transcripts_{run_date}.txt", "a") as log_file:
-    log_file.write(f"{formatted_timestamp} - Input Path: {input_path} - Output Path: {output_path} - Audio format: {audio_format} - Transcription Model: {model_chosen} - Newline interval: {word_interval} words.\n")
+def pre_processing(
+        path_to_audio, path_for_transcripts, logfilename, audio_format, word_interval, model_options, model_chosen):
+    
+    formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-# Obtain list of filenames, filtered by mp3, and being file vs directory
-mp3_filenames = [f for f in os.listdir(input_path) if f.endswith(audio_format) and os.path.isfile(os.path.join(input_path, f))]
+    # Check if the user supplied directory path exists
+    if not os.path.exists(path_to_audio):
+        error_msg = "Error, specified directory does not exist.\n"
+        with open(logfilename, "a") as log_file:
+            log_file.write(f"{formatted_timestamp} - {error_msg}")
+            print(error_msg)
+            return False # return error?
+    else: 
+        success_msg = f"Pre Processing Checks - Input directory check successful.\n"
+        with open(logfilename, "a") as log_file:
+            log_file.write(f"{formatted_timestamp} - {success_msg}")
+        print(success_msg)
+    
+    # Create the output directory path for transcripts if doesn't exist
+    if not os.path.exists(path_for_transcripts):
+        os.makedirs(path_for_transcripts)
+        success_msg = f"Pre Processing Checks - Output directory creation successful.\n"
+        with open(logfilename, "a") as log_file:
+            log_file.write(f"{formatted_timestamp} - {success_msg}")
+        print(success_msg)
 
-print(mp3_filenames)
-with open(f"log_whisper_transcripts_{run_date}.txt", "a") as log_file:
-    log_file.write("\n".join(mp3_filenames) + "\n") # concats list of strings with a \n, and the +\n ensures full write ends on a newline
+    try:
+        # Obtain list of filenames, filtered by mp3, and being file vs directory
+        mp3_filenames = [f for f in os.listdir(path_to_audio) if f.endswith(audio_format) and os.path.isfile(os.path.join(path_to_audio, f))]
+        file_count = len(mp3_filenames)
+        
+        summary_files = f"Directory contains {file_count} {audio_format} files: '\n'.join(mp3_filenames) + '\n'."
+        print(summary_files)
 
-# Whisper transcripts are one long line of text. This function will insert a newline character at the end of every {interval} i.e. 10 words 
+        with open(logfilename, "a") as log_file:
+            log_file.write(summary_files) # NB: concats list of strings with \n. The +\n ensures full write ends with a newline
+
+        # Use list of filenames to check if directory contains at least one file of type specified
+        if not mp3_filenames: # NB: an empty list is falsey
+            error_msg = f"Error, no files of type {audio_format} found in {path_to_audio}.\n"
+            with open(logfilename, "a") as log_file:
+                log_file.write(f"{formatted_timestamp} - {error_msg}")
+                return False # return error?     
+        else:
+            success_msg = "Pre Processing Checks - File type check successful.\n"
+            with open(logfilename, "a") as log_file:
+                log_file.write(f"{formatted_timestamp} - {success_msg}")
+            
+    except (FileNotFoundError, PermissionError, OSError) as e: # need to specify errors
+        error_msg = f"Error, pre-processing audio filenames. The following error occurred: {e}\n "
+        return False
+
+    # Check if word interval entered is a positive integer
+    try:
+        word_interval = abs(int(word_interval))
+    except ValueError:
+        error_msg = "Error, word interval must be a positive integer. Substituting 10 as word interval instead.\n"
+        print(error_msg)
+        word_interval = 10
+       
+    if model_chosen not in model_options:
+        error_msg += "Error, invalid model chosen. Please reselect.\n"
+        print(error_msg)
+        with open(logfilename, "a") as log_file:
+            log_file.write(f"{formatted_timestamp} - {error_msg}")
+        return False # want the script to exit here, correct model must be actively chosen 
+
+    # Need to check that this will ONLY run if all the prior conditions are successful - do i need to set a flag that exits the program if any false is returned?
+    with open(logfilename, "a") as log_file:
+            summary = f"{formatted_timestamp} - Summary of transcription parameters - Input Path: {path_to_audio} - Output Path: {path_for_transcripts} - Audio format: {audio_format} - Number of {audio_format} files: {file_count} - Transcription Model: {model_chosen} - Newline interval: {word_interval} words.\n"
+            log_file.write(summary)
+
+    print(f"Please make sure you are happy with this summary of processing:\n{summary}\n Abort if any parameters are incorrect. A large batch of files and-or a using the largest models will take significant time and compute.")
+    time.sleep(5)
+
+
+# Whisper transcripts are one long line of text. This function will insert a newline character at the end of every {interval} i.e. 10 words. If 0 was chosen, no newlines will be inserted 
 def insert_newlines(text, word_interval):
-    words = text.split() # list of individual words
-    for i in range(word_interval, len(words), word_interval): 
+    if word_interval == 0:
+        return text # Returns original text without any newlines
+    
+    words = text.split() # NB: list of individual words
+    for i in range(word_interval -1, len(words), word_interval): 
         words[i] = words[i] + '\n'
     return ' '.join(words)
 
@@ -110,10 +166,10 @@ audio_file_info = [
     "date" : "Unknown",
     "series_num" : "S6",
     "episode_num" : "E7",
-    "speakers" : [
-        {"name": "Daniel Barnett", "role": "Host"} # Host, Speaker, Interviewer
+    # "speakers" : [
+    #     {"name": "Daniel Barnett", "role": "Host"} # Host, Speaker, Interviewer
         # {"name": "Unknown", "role": "Interviewer"},
-        ]
+    #    ]
     },
     {
     # "audio_file_num" : index, 
@@ -121,10 +177,10 @@ audio_file_info = [
     "date" : "Unknown",
     "series_num" : "S6",
     "episode_num" : "E10",
-    "speakers" : [
-        {"name": "Daniel Barnett", "role": "Host"} # Host, Speaker, Interviewer
-        # {"name": "Unknown", "role": "Interviewer"},
-        ]
+    # "speakers" : [
+    #     {"name": "Daniel Barnett", "role": "Host"} # Host, Speaker, Interviewer
+    #     # {"name": "Unknown", "role": "Interviewer"},
+    #    ]
     }
 ]
 
@@ -161,7 +217,7 @@ for index, audio_file in enumerate(mp3_filenames, start=1):
     
     # whisper.ai transcription
     try:
-        path = os.path.join(input_path, audio_file)
+        path = os.path.join(path_to_audio, audio_file)
         result = model.transcribe(path)
         raw_transcript = result["text"]
 
@@ -172,7 +228,7 @@ for index, audio_file in enumerate(mp3_filenames, start=1):
     except (FileNotFoundError, RuntimeError, Exception) as e: # CalledProcessError
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         msg_transciption_error = (f"{formatted_timestamp} - Whisper transcription error - {e}")
-        with open(f"log_whisper_transcripts_{run_date}.txt", "a") as log_file:
+        with open(logfilename, "a") as log_file:
             log_file.write({formatted_timestamp}+" - "+{msg_transciption_error})
 
     # insert newlines every word_interval
@@ -191,9 +247,9 @@ for index, audio_file in enumerate(mp3_filenames, start=1):
         # NB: splitext required so that ".mp3" isn't put in filename
    
         # Ensure the output directory exists
-        os.makedirs(output_path, exist_ok=True)
+        os.makedirs(path_for_transcripts, exist_ok=True)
    
-        full_path = os.path.join(output_path, output_filename)
+        full_path = os.path.join(opath_for_transcripts, output_filename)
 
         # Now open the file for writing
         with open(full_path, "w") as output_file:
@@ -206,10 +262,10 @@ for index, audio_file in enumerate(mp3_filenames, start=1):
     except (FileNotFoundError, PermissionError, OSError, Exception) as e:
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         msg_output_file_write_error = (f"{formatted_timestamp} - Whisper transcription error - {e}")
-        with open(f"log_whisper_transcripts_{run_date}.txt", "a") as log_file:
+        with open(logfilename, "a") as log_file:
             log_file.write({formatted_timestamp}+" - "+{msg_output_file_write_error})
 
-    with open(f"log_whisper_transcripts_{run_date}.txt", "a") as log_file:
+    with open(logfilename, "a") as log_file:
         log_file.write(f"{msg_header_success}\n{msg_transcription_success}\n{msg_transcription_success}\n\n")
                        
 
@@ -242,11 +298,68 @@ mp3_filenames = [
 
 
 # %%
+# Suggested rework of pre_processing()
 
-# |  Size  | Parameters | English-only model | Multilingual model | Required VRAM | Relative speed |
-# |:------:|:----------:|:------------------:|:------------------:|:-------------:|:--------------:|
-# |  tiny  |    39 M    |     `tiny.en`      |       `tiny`       |     ~1 GB     |      ~32x      |
-# |  base  |    74 M    |     `base.en`      |       `base`       |     ~1 GB     |      ~16x      |
-# | small  |   244 M    |     `small.en`     |      `small`       |     ~2 GB     |      ~6x       |
-# | medium |   769 M    |    `medium.en`     |      `medium`      |     ~5 GB     |      ~2x       |
-# | large  |   1550 M   |        N/A         |      `large`       |    ~10 GB     |       1x       |
+def pre_processing(path_to_audio, path_for_transcripts, logfilename, audio_format, word_interval, model_chosen, model_options):
+    formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
+    error_msg = ""
+
+    # Check if the user supplied directory path exists
+    if not os.path.exists(path_to_audio):
+        error_msg = f"{formatted_timestamp} - Error, specified directory does not exist.\n"
+    else:
+        # Create the output directory path for transcripts if doesn't exist
+        if not os.path.exists(path_for_transcripts):
+            os.makedirs(path_for_transcripts)
+
+        # Check for the presence of audio files
+        try:
+            mp3_filenames = [f for f in os.listdir(path_to_audio) if f.endswith(audio_format) and os.path.isfile(os.path.join(path_to_audio, f))]
+            if not mp3_filenames:
+                error_msg = f"{formatted_timestamp} - Error, no files of type {audio_format} found in {path_to_audio}.\n"
+        except FileNotFoundError:
+            error_msg = f"{formatted_timestamp} - Error, directory not found: {path_to_audio}\n"
+        except PermissionError:
+            error_msg = f"{formatted_timestamp} - Error, permission denied for directory: {path_to_audio}\n"
+        except OSError as e:  # General catch-all for other OS-related errors
+            error_msg = f"{formatted_timestamp} - OS error occurred: {e}\n"
+
+    # Check if word interval entered is a positive integer
+    try:
+        word_interval = abs(int(word_interval))
+    except ValueError:
+        word_interval = 10  # Default value
+
+    # Check if the chosen model is valid
+    if model_chosen not in model_options:
+        error_msg += f"{formatted_timestamp} - Error, invalid model chosen. Please reselect.\n"
+
+    if error_msg:
+        with open(logfilename, "a") as log_file:
+            log_file.write(error_msg)
+        print(error_msg)
+        return False
+
+    # If everything is fine, proceed
+    with open(logfilename, "a") as log_file:
+        summary = f"{formatted_timestamp} - Summary of transcription parameters - Input Path: {path_to_audio} - Output Path: {path_for_transcripts} - Audio format: {audio_format} - Newline interval: {word_interval} words - Transcription Model: {model_chosen}\n"
+        log_file.write(summary)
+
+    print(f"Please make sure you are happy with this summary of processing:\n{summary}\nAbort if any parameters are incorrect. A large batch of files and/or using the largest models will take significant time and compute.")
+    time.sleep(5)
+    return True
+
+# Example usage
+# pre_processing(path_to_audio, path_for_transcripts, logfilename, audio_format, word_interval, model_chosen, model_options)
+
+# Alternative filename processing errror
+try:
+    mp3_filenames = [f for f in os.listdir(path_to_audio) if f.endswith(audio_format) and os.path.isfile(os.path.join(path_to_audio, f))]
+    if not mp3_filenames:
+        error_msg = f"{formatted_timestamp} - Error, no files of type {audio_format} found in {path_to_audio}.\n"
+except FileNotFoundError:
+    error_msg = f"{formatted_timestamp} - Error, directory not found: {path_to_audio}\n"
+except PermissionError:
+    error_msg = f"{formatted_timestamp} - Error, permission denied for directory: {path_to_audio}\n"
+except OSError as e:  # General catch-all for other OS-related errors
+    error_msg = f"{formatted_timestamp} - OS error occurred: {e}\n"

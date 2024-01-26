@@ -6,6 +6,7 @@ venv_whisper
 EmpLawMatters_audio
 log*.txt
 development_notes.txt
+config.py
 
 # Environments
 .env
