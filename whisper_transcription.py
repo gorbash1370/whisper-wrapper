@@ -5,7 +5,7 @@ import time
 from datetime import datetime as dt
 import whisper
 
-from main import path_to_audio, path_for_transcripts, word_interval, audio_format, model_chosen, model_options, audio_info_batch
+from user_variables import path_to_audio, path_for_transcripts, word_interval, audio_format, model_options, audio_info_batch
 
 """ gorbash1370 Intro 
 This script automates the process of transcribing audio files using a local Whisper model from OpenAI. It includes functionality for handling multiple files, adding custom headers to the transcripts, and logging the transcription process.
@@ -14,6 +14,7 @@ Notes:
 * filenames should contain title of podcast or audio track
 * Script attempts to process ALL files with the specified extension in the input path directory.
 
+!! TO DO: change the mp3 variable to format agnostic name
 !! TO DO: Do something with the True Falses? like track the flag?
 !! TO DO: a time estimator? would have to audio file length
 !! TO DO: dependencies listed in requirements.txt (TAKE OUT JUPYTER)
@@ -23,6 +24,7 @@ Last code update 24 01 26
 """
 
 logfilename = "" # Instanciates global variable
+mp3_filenames = []
 
 #%%
 ########################## Pre-Processing #########################
@@ -77,9 +79,10 @@ def pre_processing(
         mp3_filenames = [f for f in os.listdir(path_to_audio) if f.endswith(audio_format) and os.path.isfile(os.path.join(path_to_audio, f))]
         file_count = len(mp3_filenames)
         
-        summary_files = f"Directory contains {file_count} {audio_format} files: '\n'.join(mp3_filenames) + '\n'."
+        pretty_mp3_filenames = '\n'.join(mp3_filenames)
+        summary_files = f"Directory contains {file_count} {audio_format} files:\n{pretty_mp3_filenames}\n."
         print(summary_files)
-
+            
         with open(logfilename, "a") as log_file:
             log_file.write(summary_files) # NB: concats list of strings with \n. The +\n ensures full write ends with a newline
 
@@ -115,7 +118,7 @@ def pre_processing(
 
     # Need to check that this will ONLY run if all the prior conditions are successful - do i need to set a flag that exits the program if any false is returned?
     with open(logfilename, "a") as log_file:
-            summary = f"{formatted_timestamp} - Summary of transcription parameters - Input Path: {path_to_audio} - Output Path: {path_for_transcripts} - Audio format: {audio_format} - Number of {audio_format} files: {file_count} - Transcription Model: {model_chosen} - Newline interval: {word_interval} words.\n"
+            summary = f"{formatted_timestamp} - Summary of transcription parameters \n- Input Path: {path_to_audio} \n- Output Path: {path_for_transcripts} \n- Audio format: {audio_format} \n- Number of {audio_format} files: {file_count} \n- Transcription Model: {model_chosen} \n- Newline interval: {word_interval} words.\n"
             log_file.write(summary)
 
     print(f"Please make sure you are happy with this summary of processing:\n{summary}\n Abort if any parameters are incorrect. A large batch of files and-or a using the largest models will take significant time and compute.")
@@ -123,7 +126,7 @@ def pre_processing(
     return mp3_filenames, model_chosen
 
 #%%
-########################## Load model ###########################
+########################## LOAD MODEL ###########################
             
 def load_model(model_chosen): 
     """Load model"""
@@ -169,7 +172,7 @@ def extract_series_episode(
     return series, episode
 
 
-def create_header(audio_info_batch, index, audio_file):
+def create_header(audio_info_batch, index, audio_file, logfilename):
     """COMPLETE ME"""
     # for index, audio_file in enumerate(mp3_filenames, start=1):
     try:
@@ -196,6 +199,7 @@ def create_header(audio_info_batch, index, audio_file):
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         msg_header_success = (f"{formatted_timestamp} - Header construction successful.")
         print(msg_header_success)
+        print(header)
         with open(logfilename, "a"):
             log_file.write(f"{msg_header_success}\n")
         
@@ -300,19 +304,20 @@ def save_transcript(formatted_transcript, audio_file):
 
 
 #%% 
-################### CALL SEQUENCE ########################
+######################## CALL SEQUENCE ########################
 
-def master_call_single(): # do all variables just get put in here?
+def master_call_single(model_chosen): # do all variables just get put in here?
     setup_log_file()
-    pre_processing_result = pre_processing(path_to_audio, path_for_transcripts, audio_format, word_interval, model_options, model_chosen) # returns: mp3_filenames & model_chosen, also takes: logfilename
-    # not needed? mp3_filenames, model_chosen = pre_processing_result
+    mp3_filenames, model_chosen =  pre_processing(path_to_audio, path_for_transcripts, audio_format, word_interval, model_options, model_chosen, logfilename) # returns: mp3_filenames & model_chosen, also takes: logfilename
     model = load_model(model_chosen) # returns: model, takes: model_chosen
- 
+    return mp3_filenames, model
+     
 def master_call_loop(mp3_filenames, model):
     for index, audio_file in enumerate(mp3_filenames, start=1):
         header = create_header(audio_info_batch, index, audio_file) # returns: header
-        model = load_model(model_chosen) # returns: model, takes: model_chosen
         raw_transcript = transcribe(model, audio_file) # returns: raw_transcript
         # insert_newlines(text, word_interval)
         formatted_transcript = format_transcript(raw_transcript, header) # returns: formatted_transcript, takes raw_transcript, header
         save_transcript(formatted_transcript, audio_file) # takes: formatted_transcript
+
+# %%
