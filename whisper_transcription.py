@@ -14,14 +14,11 @@ Notes:
 * filenames should contain title of podcast or audio track
 * Script attempts to process ALL files with the specified extension in the input path directory: it does NOT however enumerate or process files in subfolders
 
-
-
-
 Last code update 24 01 26
 """
 
 logfilename = "" # Instanciates global variable
-mp3_filenames = []
+audio_filenames = []
 
 #%%
 ########################## Pre-Processing #########################
@@ -192,7 +189,7 @@ def create_header(audio_info_batch, index, audio_file, logfilename):
         header = "\n".join(header_parts) + "\n\n"
         
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
-        msg_header_success = (f"{formatted_timestamp} - Header construction successful.\n")
+        msg_header_success = (f"\n{formatted_timestamp} - Header construction successful.")
         print(msg_header_success)
         print(header)
         with open(logfilename, "a") as log_file:
@@ -233,6 +230,7 @@ def transcribe(model, audio_file):
         with open(logfilename, "a") as log_file:
             log_file.write({error_msg_transcription})
 
+
 #%%
 ######################### FORMATTING & OUTPUT #################################
 
@@ -256,16 +254,19 @@ def format_transcript(raw_transcript, header):
     linebreak_transcript = insert_newlines(raw_transcript, word_interval)
 
     # Combine header and transcript
-    end_delimiter = "\n---\n"
-    print(f"Header now looks like this:\n{header}")
-    formatted_transcript = header+linebreak_transcript+end_delimiter
+    formatted_transcript = header+linebreak_transcript
     
+    end_delimiter = "\n---\n"
+    word_count = f"\nWord count: {len(formatted_transcript.split())}"
+    print(word_count) # NB: just a check, can be removed
+    formatted_transcript += word_count+end_delimiter
+
     # Insert line numbers
     lines = formatted_transcript.splitlines()
     formatted_transcript = "\n".join(f"{i+1}: {line}" for i, line in enumerate(lines))
     
     formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
-    success_msg_formatting = (f"{formatted_timestamp} - Raw transcript formatted successfully.\n")
+    success_msg_formatting = (f"{formatted_timestamp} - Raw transcript formatted successfully.")
     print(success_msg_formatting)
     with open(logfilename, "a") as log_file:
         log_file.write(f"{success_msg_formatting}\n")

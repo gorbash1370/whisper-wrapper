@@ -1,3 +1,4 @@
+#%%
 """USER CHOICES"""
 
 """ Specify directory path containing audio files to be transcribed. 
@@ -82,3 +83,4 @@ audio_info_batch = [
 #        ]
 #     }
 # ]
+# %%
