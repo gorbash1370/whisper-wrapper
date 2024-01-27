@@ -1,11 +1,16 @@
 __pycache__
 venv_whisper
+
+.gitignore
+
 /batch
 /old
 /transcripts
+
 EmpLawMatters_audio
 log*.txt
 development_notes.txt
+
 config.py
 scraps.py
 
