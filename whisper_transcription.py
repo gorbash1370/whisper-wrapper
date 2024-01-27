@@ -12,7 +12,7 @@ This script automates the process of transcribing audio files using a local Whis
 
 Notes:
 * filenames should contain title of podcast or audio track
-* Script attempts to process ALL files with the specified extension in the input path directory.
+* Script attempts to process ALL files with the specified extension in the input path directory: it does NOT however enumerate or process files in subfolders
 
 
 !! Fix the series count in header
