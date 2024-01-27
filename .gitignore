@@ -7,6 +7,7 @@ EmpLawMatters_audio
 log*.txt
 development_notes.txt
 config.py
+scraps.py
 
 # Environments
 .env
