@@ -15,13 +15,7 @@ Notes:
 * Script attempts to process ALL files with the specified extension in the input path directory: it does NOT however enumerate or process files in subfolders
 
 
-!! Fix the series count in header
-!! do the move files to done directory
-!! TO DO: change the mp3 variable to format agnostic name
-!! TO DO: Do something with the True Falses? like track the flag?
-!! TO DO: a time estimator? would have to audio file length
-!! TO DO: dependencies listed in requirements.txt (TAKE OUT JUPYTER)
-!! TO DO: main.py, whisper_trasncription.py, config.py in same directory
+
 
 Last code update 24 01 26
 """

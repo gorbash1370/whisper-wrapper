@@ -1,10 +1,11 @@
 """USER CHOICES"""
 
 """ Specify directory path containing audio files to be transcribed. 
-Can be relative (i.e. "folder_name/") to reference root directory, or absolute if script isn't being run in same directory as audio files.
-If the specified directory doesn't exist, it will be created."""
+Path an be relative (i.e. "folder_name/") to reference root directory, or absolute if script isn't being run in same directory as the audio files.
+If the specified directory doesn't exist, it will be created.
+The script will NOT enumerate or process files in subfolders"""
 path_to_audio = "batch/" 
-# TEST what happens if do = ""
+
 
 """Specify transcript output folder / path. It will be created if doesn't exis."""
 path_for_transcripts = "transcripts/"
@@ -12,7 +13,7 @@ path_for_transcripts = "transcripts/"
 """Specify target audio file format
 Requirement: all files in processing batch must have same file extension / file type."""
 audio_format = ".mp3" # include the .
-# TEST what happens with different format: look at whisper documentation, does it specify just mp3
+
 
 """Choose transcription model"""
 # Whisper Model Summary:
