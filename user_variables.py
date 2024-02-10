@@ -2,7 +2,7 @@
 """USER CHOICES"""
 
 """ Specify directory path containing audio files to be transcribed. 
-Path an be relative (i.e. "folder_name/") to reference root directory, or absolute if script isn't being run in same directory as the audio files.
+Path can be relative (i.e. "folder_name/") to reference root directory, or absolute if script isn't being run in same directory as the audio files.
 If the specified directory doesn't exist, it will be created.
 The script will NOT enumerate or process files in subfolders"""
 path_to_audio = "batch/" 

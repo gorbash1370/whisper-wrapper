@@ -34,7 +34,7 @@ Jobs to do, Improvements, Bugs, Test Idaes
 # Minor tweaks
 - [ ]  Do something with the True Falses? like track the flag?
 - [ ]  Dependencies listed in requirements.txt (TAKE OUT JUPYTER)
-- [x]  main.py, whisper_trasncription.py, config.py in same directory
+- [x]  main.py, whisper_transcription.py, config.py in same directory
 - [ ]  make a list of accepted formats by whisper ffmpeg, in order to check that the audio_format chosen is compatible.
 
 
@@ -46,4 +46,4 @@ Jobs to do, Improvements, Bugs, Test Idaes
 
 # Larger tasks
 - [ ]  Allow batching of files. So enumerate the whole batch, specify a sub-batch size  / parameters, and have the loop function run across these in batches.
-- [ ]  Test with audio file from dictaphone
+- [ ]  Test with audio file from dictaphone (i.e. not podcast quality)

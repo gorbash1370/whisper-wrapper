@@ -210,7 +210,7 @@ def create_header(audio_info_batch, index, audio_file, logfilename):
 
 def transcribe(model, audio_file):
     """COMPLETE ME"""
-        # whisper transcription
+    # whisper transcription
     try:
         path = os.path.join(path_to_audio, audio_file)
         result = model.transcribe(path)
