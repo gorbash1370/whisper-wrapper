@@ -1,5 +1,5 @@
 # whisper_transcribe
-Simple implementation of the [Whispher transcription model from OpenAI](https://github.com/openai/whisper).
+Simple implementation of the [Whisper transcription model from OpenAI](https://github.com/openai/whisper).
 
 Program handles audio to text conversion of single or multiple audio files. Practice Python project.
 
@@ -16,3 +16,5 @@ This is an amateur project built mainly for coding practice, therefore...
 * Commentary may appear excessive (learning 'notes')
 * Some code is expanded (rather than shortened & simplified) for learning clarity.
 * Please always inspect code before running. Use at your own risk!
+
+# Licence

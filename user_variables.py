@@ -3,30 +3,36 @@
 
 """ Specify directory path containing audio files to be transcribed. 
 Path can be relative (i.e. "folder_name/") to reference root directory, or absolute if script isn't being run in same directory as the audio files.
-If the specified directory doesn't exist, it will be created.
-The script will NOT enumerate or process files in subfolders"""
+Files in subfolders will NOT be enumerated or processed.
+If the directory does not exist, program will exit with an error message."""
 path_to_audio = "batch/" 
 
 
-"""Specify transcript output folder / path. It will be created if doesn't exis."""
+"""Specify transcript output folder (relative) or full path (absolute). Will be created if doesn't exist."""
 path_for_transcripts = "transcripts/"
 
 """Specify target audio file format
-Requirement: all files in processing batch must have same file extension / file type."""
-audio_format = ".mp3" # include the .
+Requirement: all files in processing batch must have same file extension."""
+audio_format = ".WAV" # include the .
 
 
 """Choose transcription model"""
-# Whisper Model Summary:
-# - tiny.en: Requires ~1 GB VRAM, Speed ~32x.
-# - base.en: Requires ~1 GB VRAM, Speed ~16x.
-# - small.en: Requires ~2 GB VRAM, Speed ~6x.
-# - medium.en: Requires ~5 GB VRAM, Speed ~2x.
-# - large (Multilingual): Requires ~10 GB VRAM, Speed 1x.
+# Whisper Model Options (tiny & base 1GB VRAM, small 2GB, medium 5GB, large 10GB). Non .en are multilingual. en's are best for English.
 
-model_options = ["tiny.en", "base.en", "small.en", "medium.en", "large", "tiny", "base", "small", "medium"] # non .en are multilingual. en's best for English
+model_options = {
+    "Tiny_English": {"name": "tiny.en", "speed_x": 32},
+    "Base_English": {"name": "base.en", "speed_x": 16},
+    "Small_English": {"name": "small.en", "speed_x": 6},
+    "Medium_English": {"name": "medium.en", "speed_x": 2},
+    "Tiny_Multilingual": {"name": "tiny", "speed_x": 32},
+    "Base_Multilingual": {"name": "base", "speed_x": 16},
+    "Small_Multilingual": {"name": "small", "speed_x": 6},
+    "Medium_Multilingual": {"name": "medium", "speed_x": 2},
+    "Large_Multilingual": {"name": "large", "speed_x": 1}
+    }
 
-model_chosen = model_options[1]
+# Choose the model from the list above. Requires vale in "name" key.
+model_chosen = model_options["Medium_English"]["name"]
 
 """Whisper returns transcripts which are one long string of text with no linebreaks or speaker labels, therefore:
 Specify the interval of words at which to insert a newline in transcript, or
@@ -35,8 +41,10 @@ word_interval = 10  # approx 9 - 12 is English average
 # TEST - what happens if this is blank?
 # TEST - need to accomodate if user doesn't want line wrapping and just leave
 
+"""Choose a delimiter for transcript"""
+delimiter = "---"
 
-"""A note about filenames
+""" Note about filenames
 An ideal filename will be in this format:
 [S]eries[#][E]pisode[#] - Title.audio_format
 S6E11 - Health and Safety (with Gus Baker).mp3
@@ -48,16 +56,16 @@ S6E11 - Health and Safety (with Gus Baker).mp3
 audio_info_batch = [
     {
         "participants" : [
-        {"name": "Daniel Barnett", "role": "Host & Speaker"},
+        {"name": "", "role": ""},
         # {""name": "Unknown", "role": "Interviewer"},
         ]
     },
     {
-        "video_content" : [
-        {"type" : "QandA"}, # talk, interview, QandA
-        {"topic" : "UK Employment Law"},
-        {"series" : "Employment Law Matters"},
-        {"format" : "Podcast"}
+        "audio_content" : [
+        {"type" : ""}, # talk, interview, QandA
+        {"topic" : ""},
+        {"series" : ""},
+        {"format" : ""}
         ] # Podcast, YouTube
     },
     {

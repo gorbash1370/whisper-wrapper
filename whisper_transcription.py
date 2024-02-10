@@ -4,15 +4,20 @@ import re
 import time
 from datetime import datetime as dt
 import whisper
+import sys
 
-from user_variables import path_to_audio, path_for_transcripts, word_interval, audio_format, model_options, audio_info_batch
+get_ipython().run_line_magic('load_ext', 'autoreload')
+get_ipython().run_line_magic('autoreload', '2')
+
+
+from user_variables import path_to_audio, path_for_transcripts, word_interval, audio_format, model_options, audio_info_batch, delimiter
 
 """ gorbash1370 Intro 
 This script automates the process of transcribing audio files using a local Whisper model from OpenAI. It includes functionality for handling multiple files, adding custom headers to the transcripts, and logging the transcription process.
 
 Notes:
 * filenames should contain title of podcast or audio track
-* Script attempts to process ALL files with the specified extension in the input path directory: it does NOT however enumerate or process files in subfolders
+* Script attempts to process ALL files with the specified extension in the input path directory: it does NOT enumerate or process files in subfolders
 
 Last code update 24 01 26
 """
@@ -41,15 +46,14 @@ def setup_log_file():
 
 #%%
 def pre_processing(
-        path_to_audio, path_for_transcripts, audio_format, word_interval, model_options, model_chosen, logfilename):
-    
-    """COMPLETE ME."""
+        path_to_audio, path_for_transcripts, audio_format, word_interval, model_options, model_chosen):
+    """Checks if the input directory exists, if the output directory exists, if the audio format is present, and if the word interval is a positive integer. If all checks pass, returns a list of filenames and the model chosen. If any check fails, returns False."""
 
     formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     # Check if the user supplied directory path exists
     if not os.path.exists(path_to_audio):
-        error_msg = "Error, specified directory does not exist.\n"
+        error_msg = "Error, specified directory does not exist. Please supply a valid directory name or path containing audio files to process.\n"
         with open(logfilename, "a") as log_file:
             log_file.write(f"{formatted_timestamp} - {error_msg}")
             print(error_msg)
@@ -60,28 +64,34 @@ def pre_processing(
             log_file.write(f"{formatted_timestamp} - {success_msg}")
         print(success_msg)
     
-    # Create the output directory path for transcripts if doesn't exist
-    if not os.path.exists(path_for_transcripts):
-        os.makedirs(path_for_transcripts)
-        success_msg = f"Pre Processing Checks - Output directory creation successful.\n"
+    # Create the output directory for transcripts if doesn't exist
+    try: 
+        if not os.path.exists(path_for_transcripts):
+            os.makedirs(path_for_transcripts)
+            success_msg = f"Pre Processing Checks - Output directory creation successful.\n"
+            with open(logfilename, "a") as log_file:
+                log_file.write(f"{formatted_timestamp} - {success_msg}")
+            print(success_msg)
+    except (PermissionError, FileNotFoundError, OSError) as e:
+        error_msg = f"Error, unable to create output directory. The following error occurred: {e}\n"
         with open(logfilename, "a") as log_file:
-            log_file.write(f"{formatted_timestamp} - {success_msg}")
-        print(success_msg)
-
+            log_file.write(f"{formatted_timestamp} - {error_msg}")
+        return False
+    
     try:
-        # Obtain list of filenames, filtered by mp3, and being file vs directory
-        mp3_filenames = [f for f in os.listdir(path_to_audio) if f.endswith(audio_format) and os.path.isfile(os.path.join(path_to_audio, f))]
-        file_count = len(mp3_filenames)
+        # Obtain list of filenames, filtered by specified filetype(s), and being file vs directory
+        audio_file_names = [f for f in os.listdir(path_to_audio) if f.endswith(audio_format) and os.path.isfile(os.path.join(path_to_audio, f))]
+        file_count = len(audio_file_names)
         
-        pretty_mp3_filenames = '\n'.join(mp3_filenames)
-        summary_files = f"Directory contains {file_count} {audio_format} files:\n{pretty_mp3_filenames}\n"
+        pretty_audio_filenames = '\n'.join(audio_file_names)
+        summary_files = f"Directory contains {file_count} {audio_format} files:\n{pretty_audio_filenames}\n"
         print(summary_files)
             
         with open(logfilename, "a") as log_file:
             log_file.write(summary_files) # NB: concats list of strings with \n. The +\n ensures full write ends with a newline
 
         # Use list of filenames to check if directory contains at least one file of type specified
-        if not mp3_filenames: # NB: an empty list is falsey
+        if not audio_file_names: # NB: an empty list is falsey
             error_msg = f"Error, no files of type {audio_format} found in {path_to_audio}.\n"
             with open(logfilename, "a") as log_file:
                 log_file.write(f"{formatted_timestamp} - {error_msg}")
@@ -95,20 +105,24 @@ def pre_processing(
         error_msg = f"Error, pre-processing audio filenames. The following error occurred: {e}\n "
         return False
 
-    # Check if word interval entered is a positive integer
+    # Check if word interval entered is a positive integer or 0
     try:
         word_interval = abs(int(word_interval))
     except ValueError:
-        error_msg = "Error, word interval must be a positive integer. Substituting 10 as word interval instead.\n"
-        print(error_msg)
-        word_interval = 10
-       
-    if model_chosen not in model_options:
-        error_msg += "Error, invalid model chosen. Please reselect.\n"
+        error_msg = "Error, word interval must be a positive integer or 0. Substituting 10 as newline word interval instead.\n"
         print(error_msg)
         with open(logfilename, "a") as log_file:
             log_file.write(f"{formatted_timestamp} - {error_msg}")
-        return False # want the script to exit here, correct model must be actively chosen 
+        word_interval = 10 # the program will continue using subsituted value, even if invalid word interval (i.e. -4 or "four" entered)
+
+    # Check if model chosen is a valid selection
+    model_names = [model["name"] for model in model_options.values()]
+    if model_chosen not in model_names:
+        error_msg = "Error, invalid model chosen. Please reselect.\n"
+        print(error_msg)
+        with open(logfilename, "a") as log_file:
+            log_file.write(f"{formatted_timestamp} - {error_msg}")
+        return False # want the script to exit here, a valid model must be chosen 
 
     # Need to check that this will ONLY run if all the prior conditions are successful - do i need to set a flag that exits the program if any false is returned?
     with open(logfilename, "a") as log_file:
@@ -117,7 +131,7 @@ def pre_processing(
 
     print(f"Please make sure you are happy with this summary of processing:\n{summary}\n Abort if any parameters are incorrect. A large batch of files and-or a using the largest models will take significant time and compute.")
     time.sleep(5)
-    return mp3_filenames, model_chosen
+    return audio_file_names, model_chosen
 
 #%%
 ########################## LOAD MODEL ###########################
@@ -164,23 +178,22 @@ def extract_series_episode(
     return series, episode
 
 
-def create_header(audio_info_batch, index, audio_file, logfilename):
+def create_header(audio_info_batch, index, audio_file, delimiter):
     """COMPLETE ME"""
-    # for index, audio_file in enumerate(mp3_filenames, start=1):
     try:
         audio_file = sanitize_filename(audio_file)
         series, episode = extract_series_episode(audio_file)
         # construct individualised header for each file
         header_parts = [
-        "---", # delimiter for AI processing
+        delimiter, # delimiter for AI processing
         f"Filename: {audio_file}",
         f"Content creation date: Unknown",
-        f"Series: {audio_info_batch[1]['video_content'][2]['series']}",
+        f"Series: {audio_info_batch[1]['audio_content'][2]['series']}",
         f"Series#: {series} ",
         f"Episode#: {episode} ",
-        f"Format: {audio_info_batch[1]['video_content'][3]['format']}", 
-        f"Topic: {audio_info_batch[1]['video_content'][1]['topic']}",
-        f"Type: {audio_info_batch[1]['video_content'][0]['type']}",
+        f"Format: {audio_info_batch[1]['audio_content'][3]['format']}", 
+        f"Topic: {audio_info_batch[1]['audio_content'][1]['topic']}",
+        f"Type: {audio_info_batch[1]['audio_content'][0]['type']}",
         f"Participants: {audio_info_batch[0]['participants']}",
         f"Transcription Producer: {audio_info_batch[2]['transcript_type'][0]['producer']}",
         f"Transcription Model: {audio_info_batch[2]['transcript_type'][1]['model']}",
@@ -189,7 +202,7 @@ def create_header(audio_info_batch, index, audio_file, logfilename):
         header = "\n".join(header_parts) + "\n\n"
         
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
-        msg_header_success = (f"\n{formatted_timestamp} - Header construction successful.")
+        msg_header_success = (f"{formatted_timestamp} - Header construction successful.")
         print(msg_header_success)
         print(header)
         with open(logfilename, "a") as log_file:
@@ -209,8 +222,21 @@ def create_header(audio_info_batch, index, audio_file, logfilename):
 ########################## TRANSCRIPTION ################################
 
 def transcribe(model, audio_file):
-    """COMPLETE ME"""
-    # whisper transcription
+    """
+    Transcribes the audio file using the specified whisper model.
+
+    Args:
+        model (Model): The model used for transcription.
+        audio_file (str): The path to the audio file.
+
+    Returns:
+        str: The raw transcript of the audio file.
+
+    Raises:
+        FileNotFoundError: If the audio file is not found.
+        RuntimeError: If there is an error during transcription.
+        Exception: If any other exception occurs.
+    """
     try:
         path = os.path.join(path_to_audio, audio_file)
         result = model.transcribe(path)
@@ -220,7 +246,7 @@ def transcribe(model, audio_file):
         success_msg_transcription = (f"{formatted_timestamp} - Whisper transcription of {audio_file} successful.")
         print(success_msg_transcription)
         with open(logfilename, "a") as log_file:
-            log_file.write(f"{success_msg_transcription}\n\n")
+            log_file.write(f"{success_msg_transcription}\n")
        
         return raw_transcript
 
@@ -246,7 +272,7 @@ def insert_newlines(text, word_interval):
     return ' '.join(words)
 
 
-def format_transcript(raw_transcript, header):
+def format_transcript(raw_transcript, header, delimiter):
     """ Writes the combined header + transcript + line numbers to file.
     NEED a try except block with error log"""
         
@@ -256,7 +282,7 @@ def format_transcript(raw_transcript, header):
     # Combine header and transcript
     formatted_transcript = header+linebreak_transcript
     
-    end_delimiter = "\n---\n"
+    end_delimiter = f"\n{delimiter}\n"
     word_count = f"\nWord count: {len(formatted_transcript.split())}"
     print(word_count) # NB: just a check, can be removed
     formatted_transcript += word_count+end_delimiter
@@ -276,7 +302,7 @@ def format_transcript(raw_transcript, header):
 def save_transcript(formatted_transcript, audio_file):
     """ Save the formatted transcript to txt file and complete log file."""
     try:
-        output_filename = f"{os.path.splitext(audio_file)[0]}_(transcript).txt"
+        output_filename = f"{os.path.splitext(audio_file)[0]}_transcript.txt"
         # NB: splitext required so that ".mp3" isn't put in filename
    
         # Ensure the output directory exists
@@ -305,18 +331,46 @@ def save_transcript(formatted_transcript, audio_file):
 #%% 
 ######################## CALL SEQUENCE ########################
 
-def master_call_single(model_chosen): # do all variables just get put in here?
-    setup_log_file()
-    mp3_filenames, model_chosen =  pre_processing(path_to_audio, path_for_transcripts, audio_format, word_interval, model_options, model_chosen, logfilename) # returns: mp3_filenames & model_chosen, also takes: logfilename
+def master_call_single(model_chosen): 
+    """Calls the functions which only need to be run once (pre-processing and model load) in order to prepare for the batch transcription of files.  in sequence. If any function returns False, the program will exit with an error message. If all functions return True, the program will return the list of audio filenames and the model."""
+    if not setup_log_file():
+        print("Error in setting up log file. Exiting program.")
+        sys.exit(1)
+
+    audio_file_names, model_chosen = pre_processing(path_to_audio, 
+    path_for_transcripts, audio_format, word_interval, model_options, model_chosen) # returns: audio_file_names & model_chosen
+    if audio_file_names is None or model_chosen is None:
+        print("Error in model selection or audio filename processing. Please check error log. Exiting program.")
+        sys.exit(1)
+    
     model = load_model(model_chosen) # returns: model, takes: model_chosen
-    return mp3_filenames, model
+    if model is None:
+        print("Error in loading model. Please check error log. Exiting program.")
+        sys.exit(1)
+
+    return audio_file_names, model
      
 def master_call_loop(mp3_filenames, model):
     for index, audio_file in enumerate(mp3_filenames, start=1):
-        header, audio_file = create_header(audio_info_batch, index, audio_file, logfilename) # returns: header
+        header, audio_file = create_header(audio_info_batch, index, audio_file, delimiter) # returns: header
         raw_transcript = transcribe(model, audio_file) # returns: raw_transcript
         # insert_newlines(text, word_interval)
-        formatted_transcript = format_transcript(raw_transcript, header) # returns: formatted_transcript, takes raw_transcript, header
+        formatted_transcript = format_transcript(raw_transcript, header, delimiter) # returns: formatted_transcript, takes raw_transcript, header
         save_transcript(formatted_transcript, audio_file) # takes: formatted_transcript
 
 # %%
+
+# def master_call_single(model_chosen): 
+#     if not setup_log_file():
+#         print("Error in setup_log_file")
+#         return False
+
+#     audio_file_names, model_chosen = pre_processing(path_to_audio, path_for_transcripts, audio_format, word_interval, model_options, model_chosen)
+#     if audio_file_names is None or model_chosen is None:
+#         print("Error in pre_processing")
+#         return False
+
+#     model = load_model(model_chosen)
+#     if model is None:
+#         print("Error in load_model")
+#         return False
