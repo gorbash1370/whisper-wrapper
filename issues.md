@@ -5,14 +5,16 @@ Jobs to do, Improvements, Bugs, Test Idaes
 # Top Jobs
 
 ## Small
+- [ ]  Refactor print statements and log interactions into single helper function
+- [ ]  Test new refactored log function, testing for consistency in output
 - [ ]  Check if "Directory contains...." log file entry contains timestamps for each filename or just one at the beginning of the log entry. Ideally should be the latter.
-- [ ]  Separate out the helper functions into utils_helper.py now that the code is running.
+- [x]  Separate out the helper functions into utils_helper.py now that the code is running.
 - [ ]  return statements have been included in most functions as a default. Go through and mremove any that aren't necessary.
 - [ ]  Decide if the word interval 10 should be enforced, or if 0 should be used instead to just give the raw transcript... probably the latter.
 - [ ]  Add time_estimator function
 - [x]  Test with blank delimiter and blank Series & Episode information
 - [ ]  Amend series count to include XX of XX  
-- [ ]  Implement log_file_compulsory = True
+- [x]  Implement log_file_compulsory = True
 - [x]  Amend log file so that entries for the same file don't include 2 x newlines
 - [x] Change model_options from a list to a dictionary, and include the time parameter so that it can be used in the time estimation function
 - [x]  change the mp3 variable to format agnostic name

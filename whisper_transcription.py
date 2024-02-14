@@ -62,7 +62,7 @@ def pre_processing(
         log_file_write(msg_error, logfilename)
         sys.exit(1)
     else: 
-        msg_success = f"Pre Processing Checks - Input directory check successful.\n\n"
+        msg_success = f"Pre Processing Checks - Input directory check successful.\n"
         print(msg_success)
         log_file_write(msg_success, logfilename)
         # ? return True
@@ -74,7 +74,7 @@ def pre_processing(
             msg_success = f"Pre Processing Checks - Output directory creation successful.\n"
             log_file_write(msg_success, logfilename)
     except (PermissionError, FileNotFoundError, OSError) as e:
-        msg_error = f"Error, unable to create output directory. The following error occurred: {e}\n"
+        msg_error = f"Error, unable to create output directory. The following error occurred: {e}.\n"
         log_file_write(msg_error, logfilename)
         return False
     ### SHOULD THE SCRIPT EXIT HERE IF THE OUTPUT DIRECTORY CAN'T BE CREATED?
@@ -100,7 +100,7 @@ def pre_processing(
             log_file_write(msg_success, logfilename)
             
     except (FileNotFoundError, PermissionError, OSError) as e: # need to specify errors
-        msg_error = f"Error, pre-processing audio filenames. The following error occurred: {e}\n "
+        msg_error = f"Error, pre-processing audio filenames. The following error occurred: {e}.\n "
         log_file_write(msg_error, logfilename)
         return False
 
@@ -108,9 +108,9 @@ def pre_processing(
     try:
         word_interval = abs(int(word_interval))
     except ValueError:
-        msg_error = "Error, word interval must be a positive integer or 0. Substituting 10 as newline word interval instead.\n"
+        msg_error = "Error, word interval must be a positive integer or 0. No newlines will be inserted, leaving raw transcript.\n"
         log_file_write(msg_error, logfilename)
-        word_interval = 10 # the program will continue using subsituted value, even if invalid word interval (i.e. -4 or "four" entered)
+        word_interval = 0 # the program will continue without inserting linebreaks, even if invalid word interval (i.e. -4 or "four") entered.
 
     # Check if model chosen is a valid selection
     model_names = [model["name"] for model in model_options.values()]
@@ -120,10 +120,10 @@ def pre_processing(
         return False # want the script to exit here, a valid model must be chosen 
 
     # Need to check that this will ONLY run if all the prior conditions are successful - do i need to set a flag that exits the program if any false is returned?
-    summary = f"Summary of transcription parameters \n- Input Path: {path_to_audio} \n- Output Path: {path_for_transcripts} \n- Audio format: {audio_format} \n- Number of {audio_format} files: {file_count} \n- Transcription Model: {model_chosen} \n- Newline interval: {word_interval} words.\n\n"
+    summary = f"Summary of transcription parameters \n- Input Path: {path_to_audio} \n- Output Path: {path_for_transcripts} \n- Audio format: {audio_format} \n- Number of {audio_format} files: {file_count} \n- Transcription Model: {model_chosen} \n- Newline interval: {word_interval} words.\n"
     log_file_write(summary, logfilename)
 
-    print(f"Please ensure this summary of processing is correct:\n{summary}\n Abort if any parameters are incorrect. A large batch of files and/or a using the largest models will take significant time and compute.")
+    print(f"Please ensure this summary of processing is correct:\n{summary}\n Abort if any parameters are incorrect. A large batch of files and/or a using the largest models may take significant time and compute.")
     time.sleep(5)
     return audio_file_names, model_chosen
 
@@ -133,7 +133,7 @@ def pre_processing(
 def load_model(model_chosen): 
     """Load model selected model."""
     ### Need to do a check here that model chosen matches the list of valid models
-    if model_chosen not in model_options["name"]:
+    if model_chosen not in [m["name"] for m in model_options.values()]:
         msg_error = f"Error, invalid model name '{model_chosen}' supplied. Please reselect. Exiting program."
         log_file_write(msg_error, logfilename)
         sys.exit(1)
@@ -142,7 +142,7 @@ def load_model(model_chosen):
         return model
 
     except Exception as e: # REFINE THIS
-        msg_error = (f"Model load unsuccessful - {e}")
+        msg_error = (f"Model load unsuccessful - {e}.\n")
         log_file_write(msg_error, logfilename)               
 
 
@@ -171,13 +171,13 @@ def create_header(audio_info_batch, index, audio_file, delimiter):
         ]
         header = "\n".join(header_parts) + "\n\n"
         
-        msg_success = (f"Header construction successful.")
+        msg_success = (f"Header construction successful.\n")
         print(header)
         log_file_write(msg_success, logfilename)        
         return header, audio_file
 
     except (TypeError, KeyError, IndexError, ValueError, Exception) as e:
-        msg_error = (f"Header construction error - {e}")
+        msg_error = (f"Header construction error - {e}.\n")
         log_file_write(msg_error, logfilename)
 
 
@@ -205,12 +205,12 @@ def transcribe(model, audio_file):
         result = model.transcribe(path)
         raw_transcript = result["text"]
 
-        success_msg = (f"Whisper transcription of {audio_file} successful.")
+        success_msg = (f"Whisper transcription of {audio_file} successful.\n")
         log_file_write(success_msg, logfilename)
         return raw_transcript
 
     except (FileNotFoundError, RuntimeError, Exception) as e: # CalledProcessError?
-        msg_error = (f"Whisper transcription error - {e}")
+        msg_error = (f"Whisper transcription error - {e}.\n")
         log_file_write(msg_error, logfilename)
         return False
 
@@ -248,7 +248,7 @@ def format_transcript(raw_transcript, header, delimiter):
     lines = formatted_transcript.splitlines()
     formatted_transcript = "\n".join(f"{i+1}: {line}" for i, line in enumerate(lines))
 
-    msg_success = (f"Raw transcript formatted successfully.")
+    msg_success = (f"Raw transcript formatted successfully.\n")
     log_file_write(msg_success, logfilename)
 
     return formatted_transcript
@@ -268,12 +268,12 @@ def save_transcript(formatted_transcript, audio_file):
         with open(full_path, "w") as output_file:
             output_file.write(formatted_transcript)
         
-        msg_success = f"{audio_file} processed successfully."
+        msg_success = f"{audio_file} processed successfully.\n"
         log_file_write(msg_success, logfilename)
         return True
 
     except (FileNotFoundError, PermissionError, OSError, Exception) as e:
-        msg_error = (f"Whisper transcription error - {e}")
+        msg_error = (f"Whisper transcription error - {e}.\n")
         log_file_write(msg_error, logfilename)
         return False
 
