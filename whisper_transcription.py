@@ -50,12 +50,10 @@ def log_file_setup(log_file_complsory):
             sys.exit(1)
 
 #%%
-def pre_processing(
-        path_to_audio, path_for_transcripts, audio_format, word_interval, model_options, model_chosen):
+
     """Checks if the input directory exists, if the output directory exists, if the audio format is present, and if the word interval is a positive integer. If all checks pass, returns a list of filenames and the model chosen. If any check fails, returns False."""
 
-    formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
-
+def check_input_directory(path_to_audio):
     # Check if the user supplied directory path exists
     if not os.path.exists(path_to_audio):
         msg_error = "Error, specified directory does not exist. Valid directory name or path for audio files to process is required. Exiting program.\n"
@@ -66,19 +64,21 @@ def pre_processing(
         print(msg_success)
         log_file_write(msg_success, logfilename)
         # ? return True
-   
-    # Create the output directory for transcripts if doesn't exist
+
+def check_output_directory(path_for_transcripts):   
+    """Function attempts to create specified output directory for finished transcripts, if it doesn't already exist."""
     try: 
         if not os.path.exists(path_for_transcripts):
             os.makedirs(path_for_transcripts)
             msg_success = f"Pre Processing Checks - Output directory creation successful.\n"
             log_file_write(msg_success, logfilename)
     except (PermissionError, FileNotFoundError, OSError) as e:
-        msg_error = f"Error, unable to create output directory. The following error occurred: {e}.\n"
+        msg_error = f"Error, unable to create output directory. The following error occurred: {e}.\n Check directory path and permissions. Exiting program.\n"
         log_file_write(msg_error, logfilename)
-        return False
-    ### SHOULD THE SCRIPT EXIT HERE IF THE OUTPUT DIRECTORY CAN'T BE CREATED?
-    
+        sys.exit(1)
+
+def obtain_audio_filenames(path_to_audio, audio_format):   
+    """COMPLETE ME"""   
     try:
         # Obtain list of filenames, filtered by specified filetype(s), and being file vs directory
         audio_file_names = [f for f in os.listdir(path_to_audio) if f.endswith(audio_format) and os.path.isfile(os.path.join(path_to_audio, f))]
@@ -91,41 +91,43 @@ def pre_processing(
 
         # Use list of filenames to check if directory contains at least one file of type specified
         if not audio_file_names: # NB: an empty list is falsey
-            msg_error = f"Error, no files of type {audio_format} found in {path_to_audio}.\n"
+            msg_error = f"Error, no files of type {audio_format} found in {path_to_audio}.\n Check file extension supplied matches at least one audio file. Exiting program.\n"
             log_file_write(msg_error, logfilename)
-            return False # return error? 
-            ### SHOULD THE SCRIPT EXIT HERE IF NO files can be found? Ned to do a false check in main call function with sys.exit(1) when split up these functions
+            sys.exit(1)
         else:
-            msg_success = "Pre Processing Checks - File type check successful.\n"
+            msg_success = "File type check successful.\n"
             log_file_write(msg_success, logfilename)
+            return file_count, audio_file_names
             
     except (FileNotFoundError, PermissionError, OSError) as e: # need to specify errors
-        msg_error = f"Error, pre-processing audio filenames. The following error occurred: {e}.\n "
+        msg_error = f"Error pre-processing audio filenames. The following error occurred: {e}.\n Check directory path, file types and permissions. Exiting program.\n"
         log_file_write(msg_error, logfilename)
-        return False
+        sys.exit(1)
 
-    # Check if word interval entered is a positive integer or 0
+def check_word_interval(word_interval):
+    """Checks if word interval entered is a positive integer or 0. If entry was invalid subsitutes 0 word interval to provide raw transcript with no newlines."""
     try:
         word_interval = abs(int(word_interval))
     except ValueError:
-        msg_error = "Error, word interval must be a positive integer or 0. No newlines will be inserted, leaving raw transcript.\n"
+        msg_error = "Error, word interval must be a positive integer or 0. No newlines will be inserted, defaulting to raw transcript.\n"
         log_file_write(msg_error, logfilename)
         word_interval = 0 # the program will continue without inserting linebreaks, even if invalid word interval (i.e. -4 or "four") entered.
 
-    # Check if model chosen is a valid selection
+def check_model(model_chosen):
+    """Checks if user chosen model is a valid selection from model_options."""
     model_names = [model["name"] for model in model_options.values()]
     if model_chosen not in model_names:
-        msg_error = "Error, invalid model chosen. Please reselect.\n"
+        msg_error = "Error, invalid model chosen. Please reselect. Exiting program.\n"
         log_file_write(msg_error, logfilename)
-        return False # want the script to exit here, a valid model must be chosen 
+        sys.exit(1)
 
-    # Need to check that this will ONLY run if all the prior conditions are successful - do i need to set a flag that exits the program if any false is returned?
+def provide_pre_processing_summary(path_to_audio, path_for_transcripts, audio_format, file_count, model_chosen, word_interval):
     summary = f"Summary of transcription parameters \n- Input Path: {path_to_audio} \n- Output Path: {path_for_transcripts} \n- Audio format: {audio_format} \n- Number of {audio_format} files: {file_count} \n- Transcription Model: {model_chosen} \n- Newline interval: {word_interval} words.\n"
     log_file_write(summary, logfilename)
 
     print(f"Please ensure this summary of processing is correct:\n{summary}\n Abort if any parameters are incorrect. A large batch of files and/or a using the largest models may take significant time and compute.")
     time.sleep(5)
-    return audio_file_names, model_chosen
+    return True # ? Necessary
 
 #%%
 ########################## LOAD MODEL ###########################
