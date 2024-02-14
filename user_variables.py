@@ -1,6 +1,9 @@
 #%%
 """USER CHOICES"""
 
+"""Run this script without a log file, or log inspite of log file not being able to be instantiated"""
+log_file_compulsory = True
+
 """ Specify directory path containing audio files to be transcribed. 
 Path can be relative (i.e. "folder_name/") to reference root directory, or absolute if script isn't being run in same directory as the audio files.
 Files in subfolders will NOT be enumerated or processed.
@@ -32,7 +35,7 @@ model_options = {
     }
 
 # Choose the model from the list above. Requires vale in "name" key.
-model_chosen = model_options["Medium_English"]["name"]
+model_chosen = model_options["Tiny_English"]["name"]
 
 """Whisper returns transcripts which are one long string of text with no linebreaks or speaker labels, therefore:
 Specify the interval of words at which to insert a newline in transcript, or
@@ -41,7 +44,7 @@ word_interval = 10  # approx 9 - 12 is English average
 # TEST - what happens if this is blank?
 # TEST - need to accomodate if user doesn't want line wrapping and just leave
 
-"""Choose a delimiter for transcript"""
+"""Choose a delimiter for transcript. Empty string "" will not insert a delimiter."""
 delimiter = "---"
 
 """ Note about filenames

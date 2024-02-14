@@ -5,8 +5,11 @@ Jobs to do, Improvements, Bugs, Test Idaes
 # Top Jobs
 
 ## Small
-- [ ]  Separate out the helper functions into utils_helper.py now that the code is running. Add time_estimator function
-- [ ]  Amend series count to include XX of XX 
+- [ ]  Separate out the helper functions into utils_helper.py now that the code is running.
+- [ ]  Add time_estimator function
+- [x]  Test with blank delimiter and blank Series & Episode information
+- [ ]  Amend series count to include XX of XX  
+- [ ]  Implement log_file_compulsory = True
 - [x]  Amend log file so that entries for the same file don't include 2 x newlines
 - [x] Change model_options from a list to a dictionary, and include the time parameter so that it can be used in the time estimation function
 - [x]  change the mp3 variable to format agnostic name

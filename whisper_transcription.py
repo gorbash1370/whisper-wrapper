@@ -1,16 +1,17 @@
 #%%
 import os
-import re
 import time
 from datetime import datetime as dt
 import whisper
 import sys
 
-get_ipython().run_line_magic('load_ext', 'autoreload')
-get_ipython().run_line_magic('autoreload', '2')
+# get_ipython().run_line_magic('load_ext', 'autoreload')
+# get_ipython().run_line_magic('autoreload', '2')
 
 
-from user_variables import path_to_audio, path_for_transcripts, word_interval, audio_format, model_options, audio_info_batch, delimiter
+from user_variables import log_file_compulsory, path_to_audio, path_for_transcripts, word_interval, audio_format, model_options, audio_info_batch, delimiter
+
+from utils_helper import sanitize_filename, extract_series_episode,log_file_write
 
 """ gorbash1370 Intro 
 This script automates the process of transcribing audio files using a local Whisper model from OpenAI. It includes functionality for handling multiple files, adding custom headers to the transcripts, and logging the transcription process.
@@ -26,22 +27,26 @@ logfilename = "" # Instanciates global variable
 audio_filenames = []
 
 #%%
-########################## Pre-Processing #########################
-def setup_log_file():
+########################## PRE-PROCESSING #########################
+def log_file_setup():
     """Instanciates a datestamped .txt log file so activity in a single day is aggregated."""
     global logfilename 
     run_date = dt.now().strftime("%Y-%m-%d")
     logfilename = f"log_whisper_transcripts_{run_date}.txt"
-    formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
+    
     try:
         if not os.path.exists(logfilename):
-            with open(logfilename, "a") as log_file:
-                log_file.write(f"{formatted_timestamp} - Log File Setup - Successful.\n")
+            msg_success = ("Log File Setup - Successful.\n")
+            print(msg_success)
+            log_file_write(msg_success, logfilename)
             return True
-
-    except (FileExistsError, OSError, UnicodeEncodeError) as e:
-            error = f"{formatted_timestamp} - Error, unable to instantiate log file with name {logfilename}. The following error occurred: {e}\n"
-            print(error)
+        if os.path.exists(logfilename):
+            return True
+        
+    except (OSError, UnicodeEncodeError) as e:
+            formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
+            msg_error = f"{formatted_timestamp} - Error, unable to instantiate log file with name {logfilename}. The following error occurred: {e}\n"
+            print(msg_error)
             return False 
 
 #%%
@@ -54,6 +59,7 @@ def pre_processing(
     # Check if the user supplied directory path exists
     if not os.path.exists(path_to_audio):
         error_msg = "Error, specified directory does not exist. Please supply a valid directory name or path containing audio files to process.\n"
+        
         with open(logfilename, "a") as log_file:
             log_file.write(f"{formatted_timestamp} - {error_msg}")
             print(error_msg)
@@ -153,31 +159,6 @@ def load_model(model_chosen):
 
 #%%
 ########################## HEADER ################################
-
-# Move to utils_helper, called by create_header
-def sanitize_filename(filename):
-    """Function removes characters which may interfere with filename parsing"""
-    invalid_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
-    for char in invalid_chars:
-        filename = filename.replace(char, '')
-    return filename
-
-# Move to utils_helper, called by create_header
-def extract_series_episode(
-        audio_file, default_series="S0", default_episode="E00"):
-    """ COMPLETE ME"""
-    series_regex = r"S\d+"
-    episode_regex = r"E\d+"
-
-    series_match = re.search(series_regex, audio_file)
-    episode_match = re.search(episode_regex, audio_file)
-
-    series = series_match.group(0) if series_match else default_series
-    episode = episode_match.group(0) if episode_match else default_episode
-
-    return series, episode
-
-
 def create_header(audio_info_batch, index, audio_file, delimiter):
     """COMPLETE ME"""
     try:
@@ -326,6 +307,9 @@ def save_transcript(formatted_transcript, audio_file):
         with open(logfilename, "a") as log_file:
             log_file.write({formatted_timestamp}+" - "+{msg_output_file_write_error})
  
+# msg = f"Whisper transcription error - {e}"
+
+
 
 
 #%% 
@@ -333,9 +317,9 @@ def save_transcript(formatted_transcript, audio_file):
 
 def master_call_single(model_chosen): 
     """Calls the functions which only need to be run once (pre-processing and model load) in order to prepare for the batch transcription of files.  in sequence. If any function returns False, the program will exit with an error message. If all functions return True, the program will return the list of audio filenames and the model."""
-    if not setup_log_file():
+    if not log_file_setup():
         print("Error in setting up log file. Exiting program.")
-        sys.exit(1)
+        sys.exit(1) # currently makes logfile compulsory
 
     audio_file_names, model_chosen = pre_processing(path_to_audio, 
     path_for_transcripts, audio_format, word_interval, model_options, model_chosen) # returns: audio_file_names & model_chosen
@@ -350,8 +334,8 @@ def master_call_single(model_chosen):
 
     return audio_file_names, model
      
-def master_call_loop(mp3_filenames, model):
-    for index, audio_file in enumerate(mp3_filenames, start=1):
+def master_call_loop(audio_filenames, model):
+    for index, audio_file in enumerate(audio_filenames, start=1):
         header, audio_file = create_header(audio_info_batch, index, audio_file, delimiter) # returns: header
         raw_transcript = transcribe(model, audio_file) # returns: raw_transcript
         # insert_newlines(text, word_interval)
