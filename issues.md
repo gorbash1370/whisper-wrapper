@@ -5,7 +5,10 @@ Jobs to do, Improvements, Bugs, Test Idaes
 # Top Jobs
 
 ## Small
+- [ ]  Check if "Directory contains...." log file entry contains timestamps for each filename or just one at the beginning of the log entry. Ideally should be the latter.
 - [ ]  Separate out the helper functions into utils_helper.py now that the code is running.
+- [ ]  return statements have been included in most functions as a default. Go through and mremove any that aren't necessary.
+- [ ]  Decide if the word interval 10 should be enforced, or if 0 should be used instead to just give the raw transcript... probably the latter.
 - [ ]  Add time_estimator function
 - [x]  Test with blank delimiter and blank Series & Episode information
 - [ ]  Amend series count to include XX of XX  

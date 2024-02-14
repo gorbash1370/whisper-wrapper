@@ -1,8 +1,10 @@
 #%%
 """USER CHOICES"""
 
-"""Run this script without a log file, or log inspite of log file not being able to be instantiated"""
-log_file_compulsory = True
+"""Choose if the program should run with (True) or without (False) a log file.
+Set to False to run this script without a log file.
+True will require logfile instanciation for the program to proceed (if an error prevents log file instanciation it will exit)."""
+log_file_compulsory = True # True or False only
 
 """ Specify directory path containing audio files to be transcribed. 
 Path can be relative (i.e. "folder_name/") to reference root directory, or absolute if script isn't being run in same directory as the audio files.

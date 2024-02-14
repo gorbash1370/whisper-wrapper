@@ -2,14 +2,20 @@
 #%%
 from datetime import datetime as dt
 import re
+from user_variables import log_file_compulsory
 
 
 def log_file_write(msg, logfilename):
-        """Writes a message to the log file with a timestamp."""
+    """Writes a message to the log file with a timestamp."""
+    print(msg)
+    if log_file_compulsory == False:
+        return
+    else:
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         msg_timestamped = f"{formatted_timestamp} - " + msg
         with open(logfilename, "a") as log_file:
             log_file.write(msg_timestamped)
+    
 
 
 # Called by create_header
