@@ -9,6 +9,10 @@ Program handles audio to text conversion of single or multiple audio files. Prac
 `main.py`
 `issues.md` - project To Do list 
 
+# .py file run order
+Complete parameters in user_variables.py.
+user_variables.py -> utils_helper.py -> whisper_transcription.py -> main.py
+
 
 
 # Usual Disclaimer

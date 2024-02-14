@@ -42,7 +42,7 @@ model_chosen = model_options["Tiny_English"]["name"]
 """Whisper returns transcripts which are one long string of text with no linebreaks or speaker labels, therefore:
 Specify the interval of words at which to insert a newline in transcript, or
 Enter 0 to return the raw transcript with no line wrapping:"""
-word_interval = 10  # approx 9 - 12 is English average
+word_interval = "0"  # approx 9 - 12 is English average
 # TEST - what happens if this is blank?
 # TEST - need to accomodate if user doesn't want line wrapping and just leave
 

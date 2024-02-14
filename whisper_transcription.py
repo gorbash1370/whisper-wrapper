@@ -9,7 +9,7 @@ import sys
 # get_ipython().run_line_magic('autoreload', '2')
 
 
-from user_variables import log_file_compulsory, path_to_audio, path_for_transcripts, word_interval, audio_format, model_options, audio_info_batch, delimiter
+from user_variables import log_file_compulsory, path_to_audio, path_for_transcripts, audio_format, model_options, audio_info_batch, delimiter
 
 from utils_helper import sanitize_filename, extract_series_episode,log_file_write
 
@@ -20,14 +20,14 @@ Notes:
 * filenames should contain title of podcast or audio track
 * Script attempts to process ALL files with the specified extension in the input path directory: it does NOT enumerate or process files in subfolders
 
-Last code update 24 01 26 """
+Last code update 24 02 14 """
 
 logfilename = "" # Instanciates global variable
 audio_filenames = []
 
 #%%
 ########################## PRE-PROCESSING #########################
-def log_file_setup(log_file_complsory):
+def log_file_setup(log_file_compulsory):
     """Instanciates a datestamped .txt log file so activity in a single day is aggregated."""
     global logfilename 
     run_date = dt.now().strftime("%Y-%m-%d")
@@ -50,11 +50,11 @@ def log_file_setup(log_file_complsory):
             sys.exit(1)
 
 #%%
-
-    """Checks if the input directory exists, if the output directory exists, if the audio format is present, and if the word interval is a positive integer. If all checks pass, returns a list of filenames and the model chosen. If any check fails, returns False."""
-
 def check_input_directory(path_to_audio):
-    # Check if the user supplied directory path exists
+    """Checks if the user supplied directory path exists. If not, the program will exit with an error message & log entry.
+    args: path_to_audio (str) - the path to the directory where audio files to process are located. Imported from user_variables.py
+    """
+    ### First check supplied string against list of invalid characters?
     if not os.path.exists(path_to_audio):
         msg_error = "Error, specified directory does not exist. Valid directory name or path for audio files to process is required. Exiting program.\n"
         log_file_write(msg_error, logfilename)
@@ -63,15 +63,20 @@ def check_input_directory(path_to_audio):
         msg_success = f"Pre Processing Checks - Input directory check successful.\n"
         print(msg_success)
         log_file_write(msg_success, logfilename)
-        # ? return True
+        
 
 def check_output_directory(path_for_transcripts):   
-    """Function attempts to create specified output directory for finished transcripts, if it doesn't already exist."""
+    """    Checks if specified output directory (for finished transcripts) already exists: if it doesn't, it attempts to create it. If this process fails, the program will exit with an error message & log entry.
+
+    args: path_for_transcripts (str) - the path to the directory where transcripts will be saved. Imported from user_variables.py    """
+    ### First check supplied string against list of invalid characters?
     try: 
         if not os.path.exists(path_for_transcripts):
             os.makedirs(path_for_transcripts)
             msg_success = f"Pre Processing Checks - Output directory creation successful.\n"
             log_file_write(msg_success, logfilename)
+            
+        
     except (PermissionError, FileNotFoundError, OSError) as e:
         msg_error = f"Error, unable to create output directory. The following error occurred: {e}.\n Check directory path and permissions. Exiting program.\n"
         log_file_write(msg_error, logfilename)
@@ -108,15 +113,17 @@ def check_word_interval(word_interval):
     """Checks if word interval entered is a positive integer or 0. If entry was invalid subsitutes 0 word interval to provide raw transcript with no newlines."""
     try:
         word_interval = abs(int(word_interval))
+        return word_interval
     except ValueError:
         msg_error = "Error, word interval must be a positive integer or 0. No newlines will be inserted, defaulting to raw transcript.\n"
         log_file_write(msg_error, logfilename)
         word_interval = 0 # the program will continue without inserting linebreaks, even if invalid word interval (i.e. -4 or "four") entered.
+        return word_interval
 
 def check_model(model_chosen):
     """Checks if user chosen model is a valid selection from model_options."""
     model_names = [model["name"] for model in model_options.values()]
-    if model_chosen not in model_names:
+    if model_chosen not in model_names or model_chosen is None: 
         msg_error = "Error, invalid model chosen. Please reselect. Exiting program.\n"
         log_file_write(msg_error, logfilename)
         sys.exit(1)
@@ -141,7 +148,14 @@ def load_model(model_chosen):
         sys.exit(1)
     try:
         model = whisper.load_model(model_chosen)
-        return model
+        if model is not None:
+            msg_success = (f"{model_chosen} Model load successful.\n")
+            log_file_write(msg_success, logfilename)
+            return model
+        elif model is None:
+            msg_error = "Error in loading model. Please check error log. Exiting program."
+            log_file_write(msg_error, logfilename)
+        sys.exit(1)
 
     except Exception as e: # REFINE THIS
         msg_error = (f"Model load unsuccessful - {e}.\n")
@@ -232,7 +246,7 @@ def insert_newlines(text, word_interval):
     return ' '.join(words)
 
 
-def format_transcript(raw_transcript, header, delimiter):
+def format_transcript(raw_transcript, word_interval, header, delimiter):
     """ Writes the combined header + transcript + line numbers to file."""
     ### NEED a try except block with error log
         
@@ -256,13 +270,13 @@ def format_transcript(raw_transcript, header, delimiter):
     return formatted_transcript
 
 def save_transcript(formatted_transcript, audio_file):
-    """ Save the formatted transcript to txt file and complete log file."""
+    """Save the formatted transcript to .txt file."""
     try:
         output_filename = f"{os.path.splitext(audio_file)[0]}_transcript.txt"
-        # NB: splitext required so that ".mp3" isn't put in filename
+        # NB: splitext required so that the file extension isn't put in filename
    
-        # Ensure the output directory exists
-        os.makedirs(path_for_transcripts, exist_ok=True)
+        # Ensure the output directory exists - is this required given check_output_directory has already run?
+        # os.makedirs(path_for_transcripts, exist_ok=True)
    
         full_path = os.path.join(path_for_transcripts, output_filename)
 
@@ -270,7 +284,7 @@ def save_transcript(formatted_transcript, audio_file):
         with open(full_path, "w") as output_file:
             output_file.write(formatted_transcript)
         
-        msg_success = f"{audio_file} processed successfully.\n"
+        msg_success = f"{audio_file} processed successfully.\n\n"
         log_file_write(msg_success, logfilename)
         return True
 
@@ -282,29 +296,26 @@ def save_transcript(formatted_transcript, audio_file):
 #%% 
 ######################## CALL SEQUENCE ########################
 
-def master_call_single(model_chosen): 
-    """Calls the functions which only need to be run once (pre-processing and model load) in order to prepare for the batch transcription of files.  in sequence. If any function returns False, the program will exit with an error message. If all functions return True, the program will return the list of audio filenames and the model."""
+def master_call_single(word_interval, model_chosen): 
+    """Sequentially calls the functions which only need to be run once in order to prepare for the batch transcription of files. Successful processing of: 
+    check_input_directory, check_output_directory, obtain_audio_filenames, check_model and load_model are all essential, so the program will exit upon failure of any of these functions."""
+        # If all functions return True, the program will return the list of audio filenames and the model.
     log_file_setup(log_file_compulsory)
-    audio_file_names, model_chosen = pre_processing(path_to_audio, 
-    path_for_transcripts, audio_format, word_interval, model_options, model_chosen) # returns: audio_file_names & model_chosen
-    if audio_file_names is None or model_chosen is None:
-        print("Error in model selection or audio filename processing. Please check error log. Exiting program.")
-        sys.exit(1)
-        #### CHANGE THIS ^^ WHEN SPLIT PREPROCESSING FUNCTION
-    
+    check_input_directory(path_to_audio)
+    check_output_directory(path_for_transcripts)
+    file_count, audio_filenames = obtain_audio_filenames(path_to_audio, audio_format)
+    word_interval = check_word_interval(word_interval)
+    check_model(model_chosen)
+    provide_pre_processing_summary(path_to_audio, path_for_transcripts, audio_format, file_count, model_chosen, word_interval)
     model = load_model(model_chosen) 
-    if model is None:
-        print("Error in loading model. Please check error log. Exiting program.")
-        sys.exit(1)
-
-    return audio_file_names, model
+    return audio_filenames, model, word_interval
      
-def master_call_loop(audio_filenames, model):
+def master_call_loop(audio_filenames, model, word_interval):
     for index, audio_file in enumerate(audio_filenames, start=1):
         header, audio_file = create_header(audio_info_batch, index, audio_file, delimiter) # returns: header
         raw_transcript = transcribe(model, audio_file) # returns: raw_transcript
         # insert_newlines(text, word_interval)
-        formatted_transcript = format_transcript(raw_transcript, header, delimiter) # returns: formatted_transcript, takes raw_transcript, header
+        formatted_transcript = format_transcript(raw_transcript, word_interval, header, delimiter) # returns: formatted_transcript, takes raw_transcript, header
         save_transcript(formatted_transcript, audio_file) # takes: formatted_transcript
 
 # %%

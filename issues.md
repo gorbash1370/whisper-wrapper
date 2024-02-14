@@ -5,16 +5,14 @@ Jobs to do, Improvements, Bugs, Test Idaes
 # Top Jobs
 
 ## Small
-filename or just one at the beginning of the log entry. Ideally should be the latter.
-- [ ]  Add time_estimator function
 - [ ]  return statements have been included in most functions as a default. Go through and mremove any that aren't necessary.
-- [ ]  
 - [ ]  Amend series count to include XX of XX  
 - [ ]  Dependencies listed in requirements.txt (TAKE OUT JUPYTER)
 - [ ]  make a list of accepted formats by whisper ffmpeg, in order to check that the audio_format chosen is compatible. This may tie in with being able to accomodate multiple audio file formats in one batch.
+- [ ]  End: remove Jupyter code sections
 
 ## Large
-- [ ] Split up pre_processing() into sub-functions
+- [x] Split up pre_processing() into sub-functions
 - [ ] Time estimator function. Would have to be able to read audio file length
   - [ ]  create a read of each file length using pydub, and use that to give an estimated processing time relative to the model chosen.
   - [ ]  Count the files in the batch, print to screen. Incorporate with Time Estimator Function.
@@ -40,6 +38,16 @@ filename or just one at the beginning of the log entry. Ideally should be the la
 - [ ]  What happens if a file which is due to be processed is deleted during procssing of other files - does it crash the program or is it just skipped?
 - [ ]  What happens if the date changes during transcription, so it goes from before midnight to afterwards. Does this cause an error regarding the logfilename being datestamped? This might be particularly important if batched processing is implemented.. or will it just create a new logfilename and carry on?
 - [ ]  Test with different file formats. Successful file types: mp3, .wav
+- [x]  Blank delimiter 
+- [x]  Blank Series & Episode information
+- [ ]  0 word interval
+- [x]  invalid word interval i.e. four. Tested, substitutes 0 correctly.
+- [x]  invalid path_to_audio. Correct error message displays and exits
+- [ ]  no path_to_audio
+- [x]  invalid path_for_transcripts. Correct error message displays and exits
+- [ ]  no path_for_transcripts
+- [ ]  invalid audio_format
+- [ ]  invalid model
 
 
 ---
@@ -66,8 +74,7 @@ filename or just one at the beginning of the log entry. Ideally should be the la
 - [x] If path_to_audio is left blank i..e path_to_audio = "". Perhaps need to set a default value, i.e. batch/. No, this will be unique to the file system. It is reasonable to expect the user to input the path to the audio files, and exit if not.
 - [x]  Refactor print statements and log interactions into single helper function
 - [x]  Test new refactored log function, testing for consistency in output
-- [x]  Check if "Directory contains...." log file entry contains timestamps for each 
-
+- [x]  Check if "Directory contains...." log file entry contains timestamps for each filename or just one at the beginning of the log entry. Ideally should be the latter.
 
 ## Large
 - [x]  Test with audio file from dictaphone (i.e. not podcast quality). WAV ok.
