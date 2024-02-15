@@ -127,19 +127,18 @@ def process_time_estimator(audio_time_dict, model_key, model_options, logfilenam
         file_duration = audio_time_dict[file]
         file_mins = int((file_duration) / 60)
         file_secs = round(int(file_duration % 60), 2) 
-        est_file_process_secs = file_duration / speed_ratio
+        est_file_process_secs = round(file_duration / speed_ratio, 2)
         est_mins = int(est_file_process_secs / 60) 
         est_seconds = round(int(est_file_process_secs % 60), 2) 
         file_summary = (
-        f"At a duration of {file_mins}m{file_secs}, processing '{file}'\n"
-        f"with {model_options[model_key]['name']} at {speed_ratio}x is estimated to take {est_mins} minutes, {est_seconds} seconds.\n")
+        f"At a duration of {file_mins}min {file_secs}sec, processing '{file}'\n"
+        f"with {model_options[model_key]['name']} at {speed_ratio}x is estimated to take {est_mins}min {est_seconds}sec.\n")
         log_file_write(file_summary, logfilename)
         batch_est_seconds += est_file_process_secs
         print(f"Running total batch processing seconds: {batch_est_seconds}\n")
     formatted_batch_est_mins = int(batch_est_seconds/ 60)
     formatted_batch_est_seconds = round(int(batch_est_seconds % 60), 2)
-    batch_summary = f"Total processing time for batch is approx {formatted_batch_est_mins}min {formatted_batch_est_seconds}sec."
-    print(batch_summary)
+    batch_summary = f"Total processing time for batch is approx {formatted_batch_est_mins}min {formatted_batch_est_seconds}sec\n"
     return batch_summary
 
 

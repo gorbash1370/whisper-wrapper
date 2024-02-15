@@ -4,7 +4,7 @@
 
 """Choose if the program should run with (True) or without (False) a log file.
 Set to False to run this script without a log file.
-True will require logfile instanciation for the program to proceed (if an error prevents log file instanciation it will exit)."""
+True will require logfile instanciation for the program to proceed (if an error prevents this, the program will exit)."""
 log_file_compulsory = True # True or False only
 
 """ Specify directory path containing audio files to be transcribed. 
@@ -14,12 +14,12 @@ If the directory does not exist, program will exit with an error message."""
 path_to_audio = "batch/" 
 
 
-"""Specify transcript output folder (relative) or full path (absolute). Will be created if doesn't exist."""
+"""Specify output folder (relative) or full path (absolute) for transcripts. Will be created if doesn't exist."""
 path_for_output = "output/"
 
 """Specify target audio file format
 Requirement: all files in processing batch must have same file extension."""
-audio_format = ".WAV" # Note: include the . and make sure the case matches the actual file extension: ".wav" will not match if the files are ".WAV" 
+audio_format = ".mp4" # Note: include the . and make sure the case matches the actual file extension: ".wav" will not match if the files are ".WAV" 
 
 
 """Choose transcription model"""
@@ -39,17 +39,18 @@ model_options = {
 
 # Supply the longform name of which model should be used for the transcription
 # NB: supply the dictionary key ("Tiny_English"), NOT the model name ("tiny.en")
+# See print statements (each file) / log entry (file batch) produced by process_time_estimator() for processing time estimations
 model_key = "Tiny_English" 
 
 
-""" Choose word interval for line wrapping and to insert line-numbers into the final transcript.
-Whisper returns transcripts which are one long string of text with no linebreaks or speaker labels. Therefore:
-* Specify the interval of words at which to insert a newline into transcript, or
-* Enter 0 to return the raw transcript with no line wrapping and no line numbers
-* If an invalid interval is entered, 0 will be substituted.
-! Important note: choosing in interval will not just wrap the lines, but will insert a line number at the start of each line in the format XX: (i.e. 12:). If you don't want line numbers, set the word interval to 0.
-"""
-word_interval = 10  # approx 9 - 12 is English average
+""" Choose word interval for line wrapping and to insert line-numbers into the final transcript."""
+# Whisper returns transcripts which are one long string of text with no linebreaks or speaker labels. Therefore:
+# Specify the interval of words at which to insert a newline into transcript, or
+# Enter 0 to return the raw transcript with no line wrapping and no line numbers
+# If an invalid interval is entered, 0 will be substituted.
+# ! Important note: choosing in interval will not just wrap the lines, but will insert a line number at the start of each line in the format XX: (i.e. 12:). If you don't want line numbers, set the word interval to 0.
+
+word_interval = 0  # approx 9 - 12 is English average
 
 
 """Choose a delimiter for transcript. 
@@ -71,16 +72,16 @@ S6E11 - Health and Safety (with Gus Baker).mp3
 audio_info_batch = [
     {
         "participants" : [
-        {"name": "", "role": ""},
-        {"name": "Unknown", "role": "Interviewer"},
+        {"name": "Evan Davis", "role": "Host"},
+        {"name": "Spongebob Squarepants", "role": "Employment Expert"},
         ]
     },
     {
         "audio_content" : [
-        {"type" : ""}, # "talk", "interview", "QandA"
-        {"topic" : ""}, # e.g. "Health and Safety", "Business", "Economics"
-        {"series" : ""}, # e.g. "BBC The Bottom Line"
-        {"format" : ""} # e.g. "Podcast", "YouTube"
+        {"type" : "Talk Show"}, # "talk", "interview", "QandA"
+        {"topic" : "Employment & Business"}, # e.g. "Health and Safety", "Business", "Economics"
+        {"series" : "BBC Radio 4 The Bottom Line"}, # e.g. "BBC The Bottom Line"
+        {"format" : "Podcast audio"} # e.g. "Podcast", "YouTube"
         ] 
     },
     {

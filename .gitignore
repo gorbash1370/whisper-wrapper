@@ -5,9 +5,7 @@ venv_whisper
 
 /ignore
 /batch
-/old
-/transcripts
-/outputs
+/output
 
 log*.txt
 development_notes.txt

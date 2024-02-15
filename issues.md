@@ -4,32 +4,26 @@ Jobs to do, Improvements, Bugs, Test Idaes
 # Top Jobs
 
 ## Small
-- [ ]  return statements have been included in most functions as a default. Go through and mremove any that aren't necessary.
-- [ ]  Amend series count to include XX of XX  
-- [ ]  Dependencies listed in requirements.txt (TAKE OUT JUPYTER)
+- [ ]  return statements have been included in most functions as a default. Go through and remove any that aren't necessary.
+- [ ]  Amend series count to include XX of XX
+- [x]  Dependencies listed in requirements.txt (TAKE OUT JUPYTER)
 - [ ]  make a list of accepted formats by whisper ffmpeg, in order to check that the audio_format chosen is compatible. This may tie in with being able to accomodate multiple audio file formats in one batch.
+- [ ]  raise an custom error when the no audio files exist of the specified format in the directory
 - [ ]  Test and supply remove_newlines code
-- [ ]  End: remove Jupyter code sections
+- [x]  End: remove Jupyter code sections
 
 ## Large
-- [x] Split up pre_processing() into sub-functions
-- [x] Time estimator function. Used ffprobe and subprocess to read file length
-  - [x]  create a read of each file length using ~~pydub~~, and use that to give an estimated processing time relative to the model chosen for each file
-  - [x]  Add the processing time to give batch cumulative processing time
-- [ ] Add in an option to skip adding the header
-- [ ] Add in an option to insert newlines but not line-numbers
-- [ ] Add in an option to skip adding the word count  
 - [ ] Make a test file
 - [ ] Sanitise inputs for path_to_audio and path_for_transcripts, i.e. catch invalid names
 - [ ] Function to move processed files to a 'processed' directory
 - [ ] Complete all docstrings, including parameters
-- [ ] Start Readme file
+- [ ] Finish Readme file
 - [ ] Refine Exceptions, splitting out error messages
 - [ ] Ensure that if a single missing or dodgy file doesn't interrupt the whole stream, and that the process will 'skip' to the next file, via good Exception handling flow for FileNotFound or a model error during the transcription.
 
 ## Errors to fix
 - [x] Creation of a log file is essential for the program to run. This isn't necessarily the correct priority - the program should probably run even without a log file. Especially given that error messages are printed to screen as well as being written to log text. Would involve putting an exception around every interaction with log file though! Optionality implemented.
-- [ ] 
+
 
 
 ## Tests
@@ -37,6 +31,12 @@ Jobs to do, Improvements, Bugs, Test Idaes
 - [ ]  What happens if the date changes during transcription, so it goes from before midnight to afterwards. Does this cause an error regarding the logfilename being datestamped? This might be particularly important if batched processing is implemented.. or will it just create a new logfilename and carry on?
 - [ ]  test if input and output folder are set to the same
 - [ ]  Test with different file formats. Successful file types: mp3, .wav
+- [x]  Test with a video file. mp4 works like a dream!
+- [ ]  Test using manually completed audio_file_info data (i.e. individualised file info)
+- [ ]  no path_for_transcripts
+- [ ]  invalid audio_format
+- [ ]  invalid model
+- [ ]  no path_to_audio
 - [x]  Test with commented out header fields, see if throws error. No error, just omits.
 - [x]  Blank delimiter 
 - [x]  Blank Series & Episode information
@@ -44,16 +44,18 @@ Jobs to do, Improvements, Bugs, Test Idaes
 - [x]  0 word interval
 - [x]  invalid word interval i.e. four. Tested, substitutes 0 correctly.
 - [x]  invalid path_to_audio. Correct error message displays and exits
-- [ ]  no path_to_audio
 - [x]  invalid path_for_transcripts. Correct error message displays and exits
-- [ ]  no path_for_transcripts
-- [ ]  invalid audio_format
-- [ ]  invalid model
+
 
 ## Later / Maybe One Day
+- [ ] Add in an option to skip adding the header
+- [ ] Add in an option to insert newlines but not line-numbers
+- [ ] Add in an option to skip adding the word count 
+- [ ] Accommodate processing of all audio files in the directory, rather than having to specify a single type/file extension.
+- [ ] Create an input 'terminal' prompt for the user to enter the program user choices. This would be a more user-friendly way to input the variable values.
 - [ ]  Allow batching of files. So enumerate the whole batch, specify a sub-batch size  / parameters, and have the loop function run across these in batches.
 - [ ] Branch the code so that it can read the audio file / header details from another sources (either manual input in User Choices, or a text file maybe in a certain format). OR, maybe a better way would be to have a function which renames the files (backup first, move to backup folder) in the standardised format the program currently uses, based upon a text file or manual entry. It would be nice to remove the manual-per-file dictionary data entry from the user_variables file.
-- [ ] Accomodate all matching audio files within directory rather than having to specify
+
 ---
 
 # Completed
@@ -83,6 +85,10 @@ Jobs to do, Improvements, Bugs, Test Idaes
 ## Large
 - [x]  Test with audio file from dictaphone (i.e. not podcast quality). WAV ok.
 - [x] Catch errors in path_to_audio and path_for_transcripts (i.e. reject and exit)
+- [x] Split up pre_processing() into sub-functions
+- [x] Time estimator function. Used ffprobe and subprocess to read file length
+  - [x]  create a read of each file length using ~~pydub~~, and use that to give an estimated processing time relative to the model chosen for each file
+  - [x]  Add the processing time to give batch cumulative processing time
 
 ## Errors to fix
 
