@@ -26,30 +26,6 @@ def sanitize_filename(filename):
     return filename
 
 
-### # Windows
-windows_invalid_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
-
-# macOS
-mac_invalid_chars = [':']
-
-# Linux
-linux_invalid_chars = ['/']
-
-# Union of all invalid characters
-all_invalid_chars = list(set(windows_invalid_chars + mac_invalid_chars + linux_invalid_chars))
-
-print(all_invalid_chars)
-
-windows_reserved_names = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9']
-
-# Please note that while Linux and macOS technically allow any character other than '/' in file and directory names, it's generally a good idea to avoid using other special characters like '!', '$', '&', etc., as they can have special meanings in the shell. Also, note that macOS uses ':' as a path separator at the API level, even though it appears as '/' in the Finder and terminal.
-
-mac_linux_conventional_names = ['bin', 'dev', 'etc', 'home', 'lib', 'mnt', 'opt', 'proc', 'root', 'sbin', 'sys', 'tmp', 'usr', 'var']
-
-# Additionally, all systems have reserved names which cannot be used as file or directory names.
-
-
-
 
 # Called by create_header
 def extract_series_episode(

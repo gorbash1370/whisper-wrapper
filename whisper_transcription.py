@@ -9,7 +9,7 @@ import sys
 # get_ipython().run_line_magic('autoreload', '2')
 
 
-from user_variables import log_file_compulsory, path_to_audio, path_for_transcripts, audio_format, model_options, audio_info_batch, delimiter
+from user_variables import log_file_compulsory, path_to_audio, path_for_transcripts, audio_format, model_options, model_key, audio_info_batch, delimiter
 
 from utils_helper import sanitize_filename, extract_series_episode,log_file_write
 
@@ -120,15 +120,17 @@ def check_word_interval(word_interval):
         word_interval = 0 # the program will continue without inserting linebreaks, even if invalid word interval (i.e. -4 or "four") entered.
         return word_interval
 
-def check_model(model_chosen):
+def check_model(model_key):
     """Checks if user chosen model is a valid selection from model_options."""
+    model_chosen = model_options[model_key]["name"]
     model_names = [model["name"] for model in model_options.values()]
     if model_chosen not in model_names or model_chosen is None: 
         msg_error = "Error, invalid model chosen. Please reselect. Exiting program.\n"
         log_file_write(msg_error, logfilename)
         sys.exit(1)
 
-def provide_pre_processing_summary(path_to_audio, path_for_transcripts, audio_format, file_count, model_chosen, word_interval):
+def provide_pre_processing_summary(path_to_audio, path_for_transcripts, audio_format, file_count, model_key, word_interval):
+    model_chosen = model_options[model_key]["name"]
     summary = f"Summary of transcription parameters \n- Input Path: {path_to_audio} \n- Output Path: {path_for_transcripts} \n- Audio format: {audio_format} \n- Number of {audio_format} files: {file_count} \n- Transcription Model: {model_chosen} \n- Newline interval: {word_interval} words.\n"
     log_file_write(summary, logfilename)
 
@@ -139,9 +141,10 @@ def provide_pre_processing_summary(path_to_audio, path_for_transcripts, audio_fo
 #%%
 ########################## LOAD MODEL ###########################
             
-def load_model(model_chosen): 
+def load_model(model_key): 
     """Load model selected model."""
     ### Need to do a check here that model chosen matches the list of valid models
+    model_chosen = model_options[model_key]["name"]
     if model_chosen not in [m["name"] for m in model_options.values()]:
         msg_error = f"Error, invalid model name '{model_chosen}' supplied. Please reselect. Exiting program."
         log_file_write(msg_error, logfilename)
@@ -165,7 +168,17 @@ def load_model(model_chosen):
 #%%
 ########################## HEADER ################################
 def create_header(audio_info_batch, index, audio_file, delimiter):
-    """COMPLETE ME"""
+    """Constructs a header for the transcript file. Simply comment out any header fields that aren't required.
+    
+    Args:
+        audio_info_batch (list): List of audio filename strings in the batch.
+        index (int): The batch process order of the series.
+        audio_file (str): Filename of audio file.
+        delimiter (str): Delimiter inserted at start and end of transcript.
+    
+    Returns:
+        tuple: A tuple containing the constructed header and the sanitized audio file name."""    
+
     try:
         audio_file = sanitize_filename(audio_file)
         series, episode = extract_series_episode(audio_file)
@@ -177,10 +190,10 @@ def create_header(audio_info_batch, index, audio_file, delimiter):
         f"Series: {audio_info_batch[1]['audio_content'][2]['series']}",
         f"Series#: {series} ",
         f"Episode#: {episode} ",
-        f"Format: {audio_info_batch[1]['audio_content'][3]['format']}", 
-        f"Topic: {audio_info_batch[1]['audio_content'][1]['topic']}",
-        f"Type: {audio_info_batch[1]['audio_content'][0]['type']}",
-        f"Participants: {audio_info_batch[0]['participants']}",
+        #f"Format: {audio_info_batch[1]['audio_content'][3]['format']}", 
+        #f"Topic: {audio_info_batch[1]['audio_content'][1]['topic']}",
+        #f"Type: {audio_info_batch[1]['audio_content'][0]['type']}",
+        #f"Participants: {audio_info_batch[0]['participants']}",
         f"Transcription Producer: {audio_info_batch[2]['transcript_type'][0]['producer']}",
         f"Transcription Model: {audio_info_batch[2]['transcript_type'][1]['model']}",
         f"Series Batch process order: {index}"
@@ -269,10 +282,11 @@ def format_transcript(raw_transcript, word_interval, header, delimiter):
 
     return formatted_transcript
 
-def save_transcript(formatted_transcript, audio_file):
+def save_transcript(formatted_transcript, audio_file, model_key):
     """Save the formatted transcript to .txt file."""
     try:
-        output_filename = f"{os.path.splitext(audio_file)[0]}_transcript.txt"
+        alt_name = model_options[model_key]["alt_name"]
+        output_filename = f"{os.path.splitext(audio_file)[0]}_{alt_name}.txt"
         # NB: splitext required so that the file extension isn't put in filename
    
         # Ensure the output directory exists - is this required given check_output_directory has already run?
@@ -296,7 +310,7 @@ def save_transcript(formatted_transcript, audio_file):
 #%% 
 ######################## CALL SEQUENCE ########################
 
-def master_call_single(word_interval, model_chosen): 
+def master_call_single(word_interval, model_key): 
     """Sequentially calls the functions which only need to be run once in order to prepare for the batch transcription of files. Successful processing of: 
     check_input_directory, check_output_directory, obtain_audio_filenames, check_model and load_model are all essential, so the program will exit upon failure of any of these functions."""
         # If all functions return True, the program will return the list of audio filenames and the model.
@@ -305,9 +319,9 @@ def master_call_single(word_interval, model_chosen):
     check_output_directory(path_for_transcripts)
     file_count, audio_filenames = obtain_audio_filenames(path_to_audio, audio_format)
     word_interval = check_word_interval(word_interval)
-    check_model(model_chosen)
-    provide_pre_processing_summary(path_to_audio, path_for_transcripts, audio_format, file_count, model_chosen, word_interval)
-    model = load_model(model_chosen) 
+    check_model(model_key)
+    provide_pre_processing_summary(path_to_audio, path_for_transcripts, audio_format, file_count, model_key, word_interval)
+    model = load_model(model_key) 
     return audio_filenames, model, word_interval
      
 def master_call_loop(audio_filenames, model, word_interval):

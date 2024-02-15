@@ -25,22 +25,23 @@ Jobs to do, Improvements, Bugs, Test Idaes
 - [ ] Start Readme file
 - [ ] Refine Exceptions, splitting out error messages
 - [ ] Ensure that if a single missing or dodgy file doesn't interrupt the whole stream, and that the process will 'skip' to the next file, via good Exception handling flow for FileNotFound or a model error during the transcription.
-- [ ]  Allow batching of files. So enumerate the whole batch, specify a sub-batch size  / parameters, and have the loop function run across these in batches.
-- [ ] Branch the code so that it can read the audio file / header details from another sources (either manual input in User Choices, or a text file maybe in a certain format). OR, maybe a better way would be to have a function which renames the files (backup first, move to backup folder) in the standardised format the program currently uses, based upon a text file or manual entry. It would be nice to remove the manual-per-file dictionary data entry from the user_variables file.
+
 
 
 ## Errors to fix
-- [ ] Creation of a log file is essential for the program to run. This isn't necessarily the correct priority - the program should probably run even without a log file. Especially given that error messages are printed to screen as well as being written to log text. Would involve putting an exception around every interaction with log file though!
+- [x] Creation of a log file is essential for the program to run. This isn't necessarily the correct priority - the program should probably run even without a log file. Especially given that error messages are printed to screen as well as being written to log text. Would involve putting an exception around every interaction with log file though! Optionality implemented.
 - [ ] 
 
 
 ## Tests
 - [ ]  What happens if a file which is due to be processed is deleted during procssing of other files - does it crash the program or is it just skipped?
 - [ ]  What happens if the date changes during transcription, so it goes from before midnight to afterwards. Does this cause an error regarding the logfilename being datestamped? This might be particularly important if batched processing is implemented.. or will it just create a new logfilename and carry on?
+- [ ]  test if input and output folder are set to the same
 - [ ]  Test with different file formats. Successful file types: mp3, .wav
 - [x]  Blank delimiter 
 - [x]  Blank Series & Episode information
-- [ ]  0 word interval
+- [x]  blank string word interval. Correctly subsitutes 0.
+- [x]  0 word interval
 - [x]  invalid word interval i.e. four. Tested, substitutes 0 correctly.
 - [x]  invalid path_to_audio. Correct error message displays and exits
 - [ ]  no path_to_audio
@@ -49,7 +50,9 @@ Jobs to do, Improvements, Bugs, Test Idaes
 - [ ]  invalid audio_format
 - [ ]  invalid model
 
-
+## Later / Maybe One Day
+- [ ]  Allow batching of files. So enumerate the whole batch, specify a sub-batch size  / parameters, and have the loop function run across these in batches.
+- [ ] Branch the code so that it can read the audio file / header details from another sources (either manual input in User Choices, or a text file maybe in a certain format). OR, maybe a better way would be to have a function which renames the files (backup first, move to backup folder) in the standardised format the program currently uses, based upon a text file or manual entry. It would be nice to remove the manual-per-file dictionary data entry from the user_variables file.
 ---
 
 # Completed
