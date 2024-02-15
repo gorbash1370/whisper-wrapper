@@ -9,9 +9,9 @@ import sys
 # get_ipython().run_line_magic('autoreload', '2')
 
 
-from user_variables import log_file_compulsory, path_to_audio, path_for_transcripts, audio_format, model_options, model_key, audio_info_batch, delimiter
+from user_variables import log_file_compulsory, path_to_audio, path_for_output, audio_format, model_options, audio_info_batch, delimiter
 
-from utils_helper import sanitize_filename, extract_series_episode,log_file_write
+from utils_helper import log_file_write, sanitize_filename, audio_file_durations, process_time_estimator, extract_series_episode
 
 """ gorbash1370 Intro 
 This script automates the process of transcribing audio files using a local Whisper model from OpenAI. It includes functionality for handling multiple files, adding custom headers to the transcripts, and logging the transcription process.
@@ -65,17 +65,17 @@ def check_input_directory(path_to_audio):
         log_file_write(msg_success, logfilename)
         
 
-def check_output_directory(path_for_transcripts):   
+def check_output_directory(path_for_output):   
     """    Checks if specified output directory (for finished transcripts) already exists: if it doesn't, it attempts to create it. If this process fails, the program will exit with an error message & log entry.
 
-    args: path_for_transcripts (str) - the path to the directory where transcripts will be saved. Imported from user_variables.py    """
+    args: path_for_output (str) - the path to the directory where transcripts will be saved. Imported from user_variables.py    """
     ### First check supplied string against list of invalid characters?
     try: 
-        if not os.path.exists(path_for_transcripts):
-            os.makedirs(path_for_transcripts)
+        if not os.path.exists(path_for_output):
+            os.makedirs(path_for_output)
             msg_success = f"Pre Processing Checks - Output directory creation successful.\n"
             log_file_write(msg_success, logfilename)
-            
+           
         
     except (PermissionError, FileNotFoundError, OSError) as e:
         msg_error = f"Error, unable to create output directory. The following error occurred: {e}.\n Check directory path and permissions. Exiting program.\n"
@@ -86,23 +86,24 @@ def obtain_audio_filenames(path_to_audio, audio_format):
     """COMPLETE ME"""   
     try:
         # Obtain list of filenames, filtered by specified filetype(s), and being file vs directory
-        audio_file_names = [f for f in os.listdir(path_to_audio) if f.endswith(audio_format) and os.path.isfile(os.path.join(path_to_audio, f))]
-        file_count = len(audio_file_names)
+        audio_filenames = [f for f in os.listdir(path_to_audio) if f.endswith(audio_format) and os.path.isfile(os.path.join(path_to_audio, f))]
+        print(audio_filenames)
+        file_count = len(audio_filenames)
         
-        pretty_audio_filenames = '\n'.join(audio_file_names)
+        pretty_audio_filenames = '\n'.join(audio_filenames)
         summary_files = f"Directory contains {file_count} {audio_format} file(s):\n{pretty_audio_filenames}\n"
         # NB: concats list of strings with \n. The +\n ensures full write ends with a newline
         log_file_write(summary_files, logfilename)    
 
         # Use list of filenames to check if directory contains at least one file of type specified
-        if not audio_file_names: # NB: an empty list is falsey
+        if not audio_filenames: # NB: an empty list is falsey
             msg_error = f"Error, no files of type {audio_format} found in {path_to_audio}.\n Check file extension supplied matches at least one audio file. Exiting program.\n"
             log_file_write(msg_error, logfilename)
             sys.exit(1)
         else:
             msg_success = "File type check successful.\n"
             log_file_write(msg_success, logfilename)
-            return file_count, audio_file_names
+            return file_count, audio_filenames
             
     except (FileNotFoundError, PermissionError, OSError) as e: # need to specify errors
         msg_error = f"Error pre-processing audio filenames. The following error occurred: {e}.\n Check directory path, file types and permissions. Exiting program.\n"
@@ -129,26 +130,51 @@ def check_model(model_key):
         log_file_write(msg_error, logfilename)
         sys.exit(1)
 
-def provide_pre_processing_summary(path_to_audio, path_for_transcripts, audio_format, file_count, model_key, word_interval):
+def provide_pre_processing_summary(path_to_audio, path_for_output, audio_format, file_count, model_key, word_interval, audio_filenames):
+    """Provides a summary of the processing parameters to the user, including, where possible, an estimate of the time required to process the batch."""
     model_chosen = model_options[model_key]["name"]
-    summary = f"Summary of transcription parameters \n- Input Path: {path_to_audio} \n- Output Path: {path_for_transcripts} \n- Audio format: {audio_format} \n- Number of {audio_format} files: {file_count} \n- Transcription Model: {model_chosen} \n- Newline interval: {word_interval} words.\n"
+    summary = f"Summary of transcription parameters \n- Input Path: {path_to_audio} \n- Output Path: {path_for_output} \n- Audio format: {audio_format} \n- Number of {audio_format} files: {file_count} \n- Transcription Model: {model_chosen} \n- Newline interval: {word_interval} words.\n"
     log_file_write(summary, logfilename)
 
-    print(f"Please ensure this summary of processing is correct:\n{summary}\n Abort if any parameters are incorrect. A large batch of files and/or a using the largest models may take significant time and compute.")
-    time.sleep(5)
-    return True # ? Necessary
 
+    audio_duration_success = True # if audio_file_durations fails, then process_time_estimator should also be skipped
+    try:
+        audio_time_dict = audio_file_durations(path_to_audio, audio_filenames, logfilename) # calls helper fuction to extract audio file durations
+    except Exception as e:
+        msg_error = f"Error, unable to extract audio file durations. The following error occurred: {e}.\n"
+        log_file_write(msg_error, logfilename)
+        audio_duration_success = False
+
+    if audio_duration_success:
+        try:
+            batch_summary = process_time_estimator(audio_time_dict, model_key, model_options, logfilename) # calls helper function to estimate time required to process batch
+            log_file_write(batch_summary, logfilename)
+            msg_preprocessing_w_time = f"A large batch of files and/or a using the largest models may take significant time and compute.\nPlease ensure this summary of processing is correct:\n{summary}Estimated {batch_summary}\n"
+            print(msg_preprocessing_w_time)
+            time.sleep(5)
+        except Exception as e:
+            msg_error = f"Error, unable to estimate time required to process batch. The following error occurred: {e}.\n"
+            log_file_write(msg_error, logfilename)
+
+    else:
+
+
+        msg_preprocessing = f"A large batch of files and/or a using the largest models may take significant time and compute.\nPlease ensure this summary of processing is correct:\n{summary}"
+        print(msg_preprocessing)
+        time.sleep(5)
+    
 #%%
 ########################## LOAD MODEL ###########################
             
 def load_model(model_key): 
-    """Load model selected model."""
-    ### Need to do a check here that model chosen matches the list of valid models
-    model_chosen = model_options[model_key]["name"]
-    if model_chosen not in [m["name"] for m in model_options.values()]:
-        msg_error = f"Error, invalid model name '{model_chosen}' supplied. Please reselect. Exiting program."
+    """Load selected model into whisper transcribe function. If model is not found, the program will exit with an error message & log entry."""
+    
+    if model_key not in model_options:
+        msg_error = f"Error, invalid model name '{model_key}' supplied. Please reselect. Exiting program."
         log_file_write(msg_error, logfilename)
         sys.exit(1)
+    
+    model_chosen = model_options[model_key]["name"]
     try:
         model = whisper.load_model(model_chosen)
         if model is not None:
@@ -290,9 +316,9 @@ def save_transcript(formatted_transcript, audio_file, model_key):
         # NB: splitext required so that the file extension isn't put in filename
    
         # Ensure the output directory exists - is this required given check_output_directory has already run?
-        # os.makedirs(path_for_transcripts, exist_ok=True)
+        # os.makedirs(path_for_output, exist_ok=True)
    
-        full_path = os.path.join(path_for_transcripts, output_filename)
+        full_path = os.path.join(path_for_output, output_filename)
 
         # Now open the file for writing
         with open(full_path, "w") as output_file:
@@ -316,21 +342,21 @@ def master_call_single(word_interval, model_key):
         # If all functions return True, the program will return the list of audio filenames and the model.
     log_file_setup(log_file_compulsory)
     check_input_directory(path_to_audio)
-    check_output_directory(path_for_transcripts)
+    check_output_directory(path_for_output)
     file_count, audio_filenames = obtain_audio_filenames(path_to_audio, audio_format)
     word_interval = check_word_interval(word_interval)
     check_model(model_key)
-    provide_pre_processing_summary(path_to_audio, path_for_transcripts, audio_format, file_count, model_key, word_interval)
+    provide_pre_processing_summary(path_to_audio, path_for_output, audio_format, file_count, model_key, word_interval, audio_filenames)
     model = load_model(model_key) 
     return audio_filenames, model, word_interval
      
-def master_call_loop(audio_filenames, model, word_interval):
+def master_call_loop(audio_filenames, word_interval, model_key, model):
     for index, audio_file in enumerate(audio_filenames, start=1):
         header, audio_file = create_header(audio_info_batch, index, audio_file, delimiter) # returns: header
         raw_transcript = transcribe(model, audio_file) # returns: raw_transcript
         # insert_newlines(text, word_interval)
         formatted_transcript = format_transcript(raw_transcript, word_interval, header, delimiter) # returns: formatted_transcript, takes raw_transcript, header
-        save_transcript(formatted_transcript, audio_file) # takes: formatted_transcript
+        save_transcript(formatted_transcript, audio_file, model_key) # takes: formatted_transcript
 
 # %%
 

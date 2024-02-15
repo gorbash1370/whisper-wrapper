@@ -1,5 +1,6 @@
-#%%
 """USER CHOICES"""
+
+############# MANUAL SECTION 1 : Variables ####################
 
 """Choose if the program should run with (True) or without (False) a log file.
 Set to False to run this script without a log file.
@@ -14,11 +15,11 @@ path_to_audio = "batch/"
 
 
 """Specify transcript output folder (relative) or full path (absolute). Will be created if doesn't exist."""
-path_for_transcripts = "transcripts/"
+path_for_output = "output/"
 
 """Specify target audio file format
 Requirement: all files in processing batch must have same file extension."""
-audio_format = ".WAV" # include the .
+audio_format = ".WAV" # Note: include the . and make sure the case matches the actual file extension: ".wav" will not match if the files are ".WAV" 
 
 
 """Choose transcription model"""
@@ -36,65 +37,90 @@ model_options = {
     "Large_Multilingual": {"name": "large", "speed_x": 1, "alt_name": "large_multi"}
     }
 
-# Supply the name of the model to be used
-model_key = "Small_English"
+# Supply the longform name of which model should be used for the transcription
+# NB: supply the dictionary key ("Tiny_English"), NOT the model name ("tiny.en")
+model_key = "Tiny_English" 
 
 
-"""Whisper returns transcripts which are one long string of text with no linebreaks or speaker labels. Therefore:
-Specify the interval of words at which to insert a newline into transcript, or
-Enter 0 to return the raw transcript with no line wrapping.
-If an invalid interval is entered, 0 will be substituted."""
-word_interval = 12  # approx 9 - 12 is English average
+""" Choose word interval for line wrapping and to insert line-numbers into the final transcript.
+Whisper returns transcripts which are one long string of text with no linebreaks or speaker labels. Therefore:
+* Specify the interval of words at which to insert a newline into transcript, or
+* Enter 0 to return the raw transcript with no line wrapping and no line numbers
+* If an invalid interval is entered, 0 will be substituted.
+! Important note: choosing in interval will not just wrap the lines, but will insert a line number at the start of each line in the format XX: (i.e. 12:). If you don't want line numbers, set the word interval to 0.
+"""
+word_interval = 10  # approx 9 - 12 is English average
 
 
-"""Choose a delimiter for transcript. Empty string "" will not insert a delimiter."""
+"""Choose a delimiter for transcript. 
+Supplying an empty string "" will not insert a delimiter."""
 delimiter = "---"
 
 """ Note about filenames
-An ideal filename will be in this format:
+An ideal filename will be in this format, as the script will allow :
 [S]eries[#][E]pisode[#] - Title.audio_format
 S6E11 - Health and Safety (with Gus Baker).mp3
 """
 
 ############# MANUAL SECTION 2 : POPULATE TRANSCRIPT HEADER ####################
 
-# Populate 'group' string fields for the transcript file 'header' (so these are the same for all the videos)
+"""Fill in any string fields which are the same for all audio files in the batch, which should be included in each transcript's header."""
+
+# If any fields are not required, do NOT remove them here: go to whisper_wrapper.py, create_header() and remove them by commenting out the line.
+
 audio_info_batch = [
     {
         "participants" : [
         {"name": "", "role": ""},
-        # {""name": "Unknown", "role": "Interviewer"},
+        {"name": "Unknown", "role": "Interviewer"},
         ]
     },
     {
         "audio_content" : [
-        {"type" : ""}, # talk, interview, QandA
-        {"topic" : ""},
-        {"series" : ""},
-        {"format" : ""}
-        ] # Podcast, YouTube
+        {"type" : ""}, # "talk", "interview", "QandA"
+        {"topic" : ""}, # e.g. "Health and Safety", "Business", "Economics"
+        {"series" : ""}, # e.g. "BBC The Bottom Line"
+        {"format" : ""} # e.g. "Podcast", "YouTube"
+        ] 
     },
     {
         "transcript_type" : [
         {"producer" : "whisper"},
-        {"model" : model_chosen}
+        {"model" : model_options[model_key]["name"]}
         ]
     },
 ]
 
 # Populate information which varies per audio file
-# audio_file_info = [
-#     {
-#     "audio_file_num" : index, # don't need this, from index
-#     "audio_title": filename,
-#     "date" : "Unknown", # ref = {audio_file_info[index-1]['date']}
-#     "series_num" : "S6", # {audio_file_info[index-1]['series_num']}
-#     "episode_num" : "E7", # ref = {audio_file_info[index-1]['episode_num']}
+audio_file_info = [
+    # Individualised nfo for file 1
+    {
+    "index" : 1, # ref = {audio_file_info[index-1]['index']}
+    "date" : "2024-02-15", # ref = {audio_file_info[index-1]['date']}
     
-#     "speakers" : [
-#         {"name": "Daniel Barnett", "role": "Host"} # Host, Speaker, Interviewer
-#         {"name": "Unknown", "role": "Interviewer"},
-#        ]
-#     }
-# ]
-# %%
+    # NB: only need series_num and episode_num if the audio file name does not contain this information: S06 E07 can be extracted by extract_series_episode()
+    "series_num" : "S6", # {audio_file_info[index-1]['series_num']}
+    "episode_num" : "E7", # ref = {audio_file_info[index-1]['episode_num']}
+    
+    "speakers" : [
+        {"name": "Evan Davies", "role": "Host"}, # Host, Speaker, Interviewer
+        {"name": "Mr A", "role": "Interviewee"},
+        {"name": "Mrs B", "role": "Interviewee"},
+       ]
+    },
+    # Individualised info for file 2
+    {
+    "index" : 2, # ref = {audio_file_info[index-1]['index']}
+    "date" : "2024-02-15", # ref = {audio_file_info[index-1]['date']}
+    
+    # NB: only need series_num and episode_num if the audio file name does not contain this information: S06 E07 can be extracted by extract_series_episode()
+    "series_num" : "S6", # {audio_file_info[index-1]['series_num']}
+    "episode_num" : "E7", # ref = {audio_file_info[index-1]['episode_num']}
+    
+    "speakers" : [
+        {"name": "Dr Bob", "role": "Host"}, # Host, Speaker, Interviewer
+        {"name": "Spongebob", "role": "Interviewee"},
+        {"name": "Catty McCat", "role": "Guest"},
+       ]
+    }
+]

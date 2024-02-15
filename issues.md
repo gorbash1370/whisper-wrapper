@@ -1,7 +1,6 @@
 # Issues
 Jobs to do, Improvements, Bugs, Test Idaes
 
-
 # Top Jobs
 
 ## Small
@@ -13,11 +12,12 @@ Jobs to do, Improvements, Bugs, Test Idaes
 
 ## Large
 - [x] Split up pre_processing() into sub-functions
-- [ ] Time estimator function. Would have to be able to read audio file length
-  - [ ]  create a read of each file length using pydub, and use that to give an estimated processing time relative to the model chosen.
-  - [ ]  Count the files in the batch, print to screen. Incorporate with Time Estimator Function.
-  - [ ]  if manage to batch files, can then use the processing time to give batch cumulative processing time
-- [ ] Accomodate all matching audio files within directory rather than having to specify
+- [x] Time estimator function. Used ffprobe and subprocess to read file length
+  - [x]  create a read of each file length using ~~pydub~~, and use that to give an estimated processing time relative to the model chosen for each file
+  - [x]  Add the processing time to give batch cumulative processing time
+- [ ] Add in an option to skip adding the header
+- [ ] Add in an option to insert newlines but not line-numbers
+- [ ] Add in an option to skip adding the word count  
 - [ ] Make a test file
 - [ ] Sanitise inputs for path_to_audio and path_for_transcripts, i.e. catch invalid names
 - [ ] Function to move processed files to a 'processed' directory
@@ -25,8 +25,6 @@ Jobs to do, Improvements, Bugs, Test Idaes
 - [ ] Start Readme file
 - [ ] Refine Exceptions, splitting out error messages
 - [ ] Ensure that if a single missing or dodgy file doesn't interrupt the whole stream, and that the process will 'skip' to the next file, via good Exception handling flow for FileNotFound or a model error during the transcription.
-
-
 
 ## Errors to fix
 - [x] Creation of a log file is essential for the program to run. This isn't necessarily the correct priority - the program should probably run even without a log file. Especially given that error messages are printed to screen as well as being written to log text. Would involve putting an exception around every interaction with log file though! Optionality implemented.
@@ -38,6 +36,7 @@ Jobs to do, Improvements, Bugs, Test Idaes
 - [ ]  What happens if the date changes during transcription, so it goes from before midnight to afterwards. Does this cause an error regarding the logfilename being datestamped? This might be particularly important if batched processing is implemented.. or will it just create a new logfilename and carry on?
 - [ ]  test if input and output folder are set to the same
 - [ ]  Test with different file formats. Successful file types: mp3, .wav
+- [x]  Test with commented out header fields, see if throws error. No error, just omits.
 - [x]  Blank delimiter 
 - [x]  Blank Series & Episode information
 - [x]  blank string word interval. Correctly subsitutes 0.
@@ -53,6 +52,7 @@ Jobs to do, Improvements, Bugs, Test Idaes
 ## Later / Maybe One Day
 - [ ]  Allow batching of files. So enumerate the whole batch, specify a sub-batch size  / parameters, and have the loop function run across these in batches.
 - [ ] Branch the code so that it can read the audio file / header details from another sources (either manual input in User Choices, or a text file maybe in a certain format). OR, maybe a better way would be to have a function which renames the files (backup first, move to backup folder) in the standardised format the program currently uses, based upon a text file or manual entry. It would be nice to remove the manual-per-file dictionary data entry from the user_variables file.
+- [ ] Accomodate all matching audio files within directory rather than having to specify
 ---
 
 # Completed
