@@ -8,6 +8,7 @@ Jobs to do, Improvements, Bugs, Test Idaes
 - [ ]  Amend series count to include XX of XX  
 - [ ]  Dependencies listed in requirements.txt (TAKE OUT JUPYTER)
 - [ ]  make a list of accepted formats by whisper ffmpeg, in order to check that the audio_format chosen is compatible. This may tie in with being able to accomodate multiple audio file formats in one batch.
+- [ ]  Test and supply remove_newlines code
 - [ ]  End: remove Jupyter code sections
 
 ## Large
