@@ -92,17 +92,17 @@ Fill in any string fields which are the same for all audio files in the batch.""
 audio_info_batch = [
     {
         "participants" : [
-        {"name": "Andrew Ng", "role": "Host"},
-        {"name": "Unknown", "role": "LangChain"},
+        {"name": "", "role": ""}, # Host, Speaker, Interviewer
+        {"name": "", "role": ""},
         ]
     },
     {
         "audio_content" : [
-        {"type" : "AI Course"}, # "talk", "interview", "QandA"
-        {"topic" : "AI, LLM"}, # e.g. "Health and Safety", "Business", "Economics"
-        {"series" : "DLAI LangChain Chat With Your Data"}, # e.g. "BBC The Bottom Line"
-        {"format" : "DLAI Course Video"}, # e.g. "Podcast", "YouTube"
-        {"date" : "2023-08"} # most content will be date unique, and so this field is likely to need to be commented out in create_header() in whisper_wrapper.py
+        {"type" : ""}, # "talk", "interview", "QandA"
+        {"topic" : ""}, # e.g. "Health and Safety", "Business", "Economics"
+        {"series" : ""}, # e.g. "BBC The Bottom Line"
+        {"format" : ""}, # e.g. "Podcast", "YouTube"
+        {"date" : ""} # most content will be date unique, and so this field is likely to need to be commented out in create_header() in whisper_wrapper.py
         ] 
     },
     {
@@ -129,7 +129,7 @@ audio_file_info = [
     "episode_num" : "E7", # {audio_file_info[index-1]['episode_num']}
     
     "speakers" : [
-        {"name": "Evan Davies", "role": "Host"}, # Host, Speaker, Interviewer
+        {"name": "Mr Presenter", "role": "Host"}, # Host, Speaker, Interviewer
         {"name": "Mr A", "role": "Interviewee"},
         {"name": "Mrs B", "role": "Interviewee"},
        ]
