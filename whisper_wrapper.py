@@ -8,23 +8,31 @@ import sys
 
 from user_variables import use_log_file, path_to_logs, path_to_audio, path_for_output, path_for_processed, audio_format, model_options, audio_info_batch, audio_file_info, delimiter
 
-from utils_helper import log_file_write, audio_file_durations, process_time_estimator, extract_series_episode, move_processed_file
+from utils_helper import log_file_write, audio_file_durations, process_time_estimator, extract_series_episode, insert_newlines
 
-log_path = "" # Instanciates global variable
+# Instanciate global variables
+log_path = "" 
 audio_filenames = []
 
-########################## PRE-PROCESSING #########################
+#########################  PRE-PROCESSING ######################### 
 def log_file_setup(use_log_file, path_to_logs):
     """
-    Instanciates a datestamped .txt log file so activity in a single day is aggregated.
+    Instanciates a datestamped .txt log file so activity in a single day is aggregated. Creates the specified directory for the log file if it doesn't already exist.
 
     Args:
-        use_log_file (bool): If True, a log file will be created. If False, no log file will be created. Set in user_variables.py.
+        use_log_file (bool): Flag. If True, a log file will be created. If False, no log file will be created. User-set in user_variables.py.
+        path_to_logs (str): Path to the directory where the log file will be created. User-specified in user_variables.py.
     
+    Raises:
+        TypeError: If value of use_log_file is not a boolean or if log_path is not a string.
+        OSError: If there is a system-related error, such as a file not found.
+        UnicodeEncodeError: If there are issues with the encoding of the file.
+
     Returns:
         bool: True if log file is set up successfully, False if log file is not set up.
 
-        sys.exit(): The program will exit if the value of use_log_file was not a boolean value, or if the log file was set to compulsory but could not be instantiated.
+    Exits:
+        sys.exit(): Program will exit if the value of use_log_file was not a boolean value, or if the log file was set to compulsory but could not be instantiated.
     """
 
     try:
@@ -77,9 +85,12 @@ def check_input_directory(path_to_audio):
     Checks if the user supplied directory path exists. If not, the program will exit with an error message and log entry.
     
     Args: 
-        path_to_audio (str) - the path to the directory where audio files to process are located. Imported from user_variables.py
+        path_to_audio (str): Path to directory containing the audio files. Imported from user_variables.py
+    
+    Exits:
+        sys.exit(): Program will exit if specified target directory does not exist.
     """
-    ### First check supplied string against list of invalid characters?
+    
     if not os.path.exists(path_to_audio):
         msg_error = "Error, specified directory does not exist. Valid directory name or path for audio files to process is required. Exiting program.\n"
         log_file_write(msg_error, log_path)
@@ -90,12 +101,16 @@ def check_input_directory(path_to_audio):
         
 
 def check_output_directory(path_for_output):   
-    """    Checks if specified output directory (for finished transcripts) already exists: if it doesn't, it attempts to create it. If this process fails, the program will exit with an error message & log entry.
+    """
+    Checks if the user specified output directory (to receive finished transcripts) already exists: if it doesn't, it attempts to create it. If this process fails, the program will exit with an error message and log entry.
 
     Args:
-        path_for_output (str) - the path to the directory where transcripts will be saved. Imported from user_variables.py
+        path_for_output (str) - Path to the directory where transcripts will be saved. Imported from user_variables.py
+    
+    Exits:
+        sys.exit(): Program will exit if the directory cannot be created.
     """
-    ### First check supplied string against list of invalid characters?
+    
     try: 
         if not os.path.exists(path_for_output):
             os.makedirs(path_for_output)
@@ -110,11 +125,15 @@ def check_output_directory(path_for_output):
 
 
 def check_processed_directory(move_processed, path_for_processed):
-    """Checks if specified output directory (for moved audio files) already exists: if it doesn't, it attempts to create it. If this process fails, the program will exit with an error message & log entry.
+    """
+    Checks if the user specified output directory (to receive processed audio files) already exists: if it doesn't, it attempts to create it. If this process fails, the program will exit with an error message and log entry.
     
     Args:
-        move_processed (bool) - if True, processed audio files will be moved to a new directory. If False, no files will be moved. Imported from user_variables.py
-        path_for_processed (str) - the path to the directory where processed audio files will be moved. Imported from user_variables.py
+        move_processed (bool) - Flag. If True, processed audio files will be moved to the specified 'processed' directory. If False, no files will be moved. Imported from user_variables.py
+        path_for_processed (str) - Path of directory to which processed audio files will be moved. Imported from user_variables.py
+
+    Returns:
+        bool: False if move_processed is not a boolean or if move_processed is False. Does not return a value if the directory is successfully created.
     """
     try:
         if not isinstance(move_processed, bool):
@@ -136,7 +155,20 @@ def check_processed_directory(move_processed, path_for_processed):
 
 
 def obtain_audio_filenames(path_to_audio, audio_format):   
-    """COMPLETE ME"""   
+    """
+    Obtains a list of audio file filenames in the target directory, incorporating a check to ensure that at least one file of the specified type is present. If no files are found, the program will exit with an error message and log entry.
+
+    Args:
+        path_to_audio (str): Path to directory containing the audio files. Imported from user_variables.py
+        audio_format (str): The file extension of the audio files. Imported from user_variables.py
+
+    Returns:
+        tuple: A tuple containing the number of files (file_count) and a list of the audio_filenames.
+
+    Exits:
+        sys.exit(): Program will exit if there are no files of the target type in the specified directory.
+    """   
+    
     try:
         # Obtain list of filenames, filtered by specified filetype(s), and being file vs directory
         audio_filenames = [f for f in os.listdir(path_to_audio) if f.endswith(audio_format) and os.path.isfile(os.path.join(path_to_audio, f))]
@@ -166,14 +198,19 @@ def obtain_audio_filenames(path_to_audio, audio_format):
 
 
 def check_word_interval(word_interval):
-    """Checks if word interval entered is a positive integer or 0. If value is invalid 0 is substituted and a raw transcript with no newlines or line numbers will be outputted.
+    """
+    Checks if word_interval entered is a positive integer or 0. If value is invalid, 0 is substituted and a raw transcript with no newlines or line numbers will be outputted.
     
     Args:
-        word_interval (str) - word interval at which to insert newlines into the transcript. Imported from user_variables.py
+        word_interval (int) - Word interval at which to insert newlines into the transcript. Imported from user_variables.py
 
+    Raises:
+        ValueError: If the value of word_interval cannot be converted to an integer.
+        
     Returns:
-        word_interval (int) - the word interval at which to insert newlines into the transcript, which may have been changed to 0 if the input was invalid. If it was originally valid, the value will be the same as passed in.
+        word_interval (int) - The word interval at which to insert newlines into the transcript, which may have been changed to 0 if the user-input was invalid. If it was originally valid, the value will be the same as that passed in.
     """
+
     try:
         word_interval = abs(int(word_interval))
         return word_interval
@@ -185,11 +222,17 @@ def check_word_interval(word_interval):
 
 
 def check_model(model_key):
-    """Checks if selected model is a valid choice from model_options.
+    """Checks if selected model is a valid choice from model_options dictionary.
     
     Args:
-        model_key (str) - the user's chosen model as a longform string. References keys in model_options dictionary. Imported from user_variables.py
+        model_key (str): The key for the chosen model in the model_options dictionary. Imported from user_variables.py
+
+    Raises:
+        KeyError: If the model_key is not found in the model_options dictionary.
     
+    Exits:
+        sys.exit(): Program will exit if the chosen model is not valid or is None.
+
     Returns: None
     """
     model_chosen = model_options[model_key]["name"]
@@ -204,10 +247,19 @@ def provide_pre_processing_summary(path_to_audio, path_for_output, audio_format,
     """Provides a summary of the processing parameters to the user, including, where possible, an estimate of the time required to process the batch.
     
     Args:
+        path_to_audio (str): Path to directory containing the audio files. Imported from user_variables.py 
+        path_for_output (str) - Path to the directory where transcripts will be saved. Imported from user_variables.py
+        audio_format (str): File extension / format of the audio files. Imported from user_variables.py
+        file_count (int): Number of audio files in the batch to be processed.
+        model_key (str): The key for the chosen model in the model_options dictionary. Imported from user_variables.py
+        word_interval (int) - The word interval at which to insert newlines into the transcript, which may have been changed to 0 by  check_word_interval() since it's original pass to master_call_single(), if the user-input was invalid.
+        audio_filenames (list): List of audio file names in the batch, generated by obtain_audio_filenames()
 
-    
+    Interactions:
+        Calls two helper functions: audio_file_durations() and process_time_estimator() to extract the audio file duration and then calculate the estimated time required to process the batch. If there are errors in either of these functions, the program will simply continue without the time estimation.
+
     Returns:
-        None
+        None. Does output to screen and log file a summary of the processing parameters, and where possible, an estimate of the time required to process the batch. Processing time for individual files is only printed to screen - a batch processing time estimate is printed and written to the log file.
     
     """
     model_chosen = model_options[model_key]["name"]
@@ -238,14 +290,22 @@ def provide_pre_processing_summary(path_to_audio, path_for_output, audio_format,
         print(msg_preprocessing)
         time.sleep(5)
     
-########################## LOAD MODEL ###########################
+######################### LOAD MODEL #########################
             
 def load_model(model_key): 
     """Loads selected model into whisper transcribe function. If model is not found, the program will exit with an error message and log entry.
     
     Args:
+        model_key (str): Key representing the chosen model from model_options dictionary.
 
+    Interactions:
+        check_model() has already been called to ensure that the model_key is a valid choice from the model_options dictionary, so any errors here are likely to be system-related.
+
+    Exits:
+        sys.exit(): Program will exit if the returned model None.
+                
     Returns:
+        model (str): The Whisper ASR model instance to be used for transcription.
 
     """
     
@@ -271,18 +331,23 @@ def load_model(model_key):
         log_file_write(msg_error, log_path)               
 
 
-########################## HEADER ################################
+######################### HEADER #########################
 def create_header(index, audio_file, delimiter):
-    """Constructs a header for the transcript file. Simply comment out any header fields that aren't required.
+    """Constructs a header for the transcript file.
     
     Args:
-        audio_info_batch (list): List of audio filename strings in the batch.
         index (int): The batch process order of the series.
-        audio_file (str): Filename of audio file.
+        audio_file (str): Filename of the currently processing audio file.
         delimiter (str): Delimiter inserted at start and end of transcript.
     
+    Manual Customisation:
+        The header fields are populated from the audio_info_batch and audio_file_info dictionaries in user_variables.py. If any fields are not required, simply comment out the line beginning `f"{field_name}` which you want to omit. Depending upon the method you are using, you will need to change the interpolated references to point towards whichever dictionary you are using. The default is to use audio_info_batch, as it is far less labour intensive (but, obviously, it cannot accomodate information which should vary per file. See README for full explanation). 
+
+    Interactions:
+        Calls extract_series_episode() in utils_helper.py to extract series and episode numbers from the filename where possible.    
+
     Returns:
-        tuple: A tuple containing the constructed header (str) and the audio file name (str)."""    
+        tuple: A tuple containing the constructed header (str) and the audio_file name (str)."""    
 
     try:
         # Extract series and episode numbers from filename where possible     
@@ -322,21 +387,21 @@ def create_header(index, audio_file, delimiter):
         log_file_write(msg_error, log_path)
 
 
-########################## TRANSCRIPTION ################################
+######################### TRANSCRIPTION ######################### 
 
 def transcribe(model, audio_file):
     """
     Transcribes the audio file using the specified whisper model.
 
     Args:
-        model (Model): The model used for transcription.
-        audio_file (str): The path to the audio file.
+        model (str): The Whisper ASR model instance to be used for transcription, instanciated by load_model().
+        audio_file (str): Filename of the currently processing audio file.
 
     Returns:
-        str: The raw transcript of the audio file.
+        raw transcript (str): unformatted text string the audio file produced by Whisper.
 
     Raises:
-        FileNotFoundError: If the audio file is not found.
+        FileNotFoundError: If the input audio file is not found.
         RuntimeError: If there is an error during transcription.
         Exception: If any other exception occurs.
     """
@@ -355,89 +420,129 @@ def transcribe(model, audio_file):
         return False
 
 
-######################### FORMATTING & OUTPUT #################################
-
-# helper function to move            
-def insert_newlines(text, word_interval):
-    """Whisper transcripts are one long line of text. This function will insert a newline character at the end of every {interval} i.e. 10 words. If 0 was chosen, no newlines will be inserted.
-    
-    Args:
-
-    Returns:
-    
-    """
-    if word_interval == 0:
-        return text # Returns original text without any newlines
-    
-    words = text.split() # NB: list of individual words
-    for i in range(word_interval -1, len(words), word_interval): 
-        words[i] = words[i] + '\n'
-    return ' '.join(words)
-
+######################### FORMATTING & OUTPUT #########################
 
 def format_transcript(raw_transcript, word_interval, header, delimiter):
-    """ Writes the combined header + transcript + line numbers to file.
-    
-        
+    """ Manifests the header + transcript + line numbers and newlines + word count and writes the combination to a text file.
+            
     Args:
+        raw transcript (str): unformatted text string the audio file produced by Whisper.
+        word_interval (int) - User defined word interval at which to insert newlines into the transcript, which may have been changed to 0 by check_word_interval() if the user-input was invalid. 
+        header (str): The header fields constructed by create_header().
+        delimiter (str): User-defined delimiter to be inserted at start and end of transcript. If an empty string was supplied, no delimiter will be inserted.
+
+    Interactions:
+        Calls insert_newlines() to insert newlines into the raw transcript at the specified word_interval.    
+
+    Contingency:
+        If the function encounters an error, it will return the raw transcript as it was passed in, without formatting.        
 
     Returns:
-    
-    """
-    ### NEED a try except block with error log
+        - formatted_transcript (str): If the function is successful and no error is thrown, it will return the formatted transcript with header, newlines, line numbers, word count and delimiters.
+        - raw_transcript (str): If the function encounters an error, it will return the raw transcript without formatting.
         
-    # Insert newlines every word_interval
-    linebreak_transcript = insert_newlines(raw_transcript, word_interval)
+    """
+    try:       
+        # Insert newlines every word_interval
+        linebreak_transcript = insert_newlines(raw_transcript, word_interval)
 
-    # Combine header and transcript
-    formatted_transcript = header+linebreak_transcript
+        # Combine header and transcript
+        formatted_transcript = header+linebreak_transcript
+        
+        end_delimiter = f"\n{delimiter}\n"
+        word_count = f"\nWord count: {len(formatted_transcript.split())}"
+        formatted_transcript += word_count+end_delimiter
+
+        # Insert line numbers
+        lines = formatted_transcript.splitlines()
+        formatted_transcript = "\n".join(f"{i+1}: {line}" for i, line in enumerate(lines))
+
+        msg_success = (f"Raw transcript formatted successfully.\n")
+        log_file_write(msg_success, log_path)
+
+        return formatted_transcript
     
-    end_delimiter = f"\n{delimiter}\n"
-    word_count = f"\nWord count: {len(formatted_transcript.split())}"
-    formatted_transcript += word_count+end_delimiter
-
-    # Insert line numbers
-    lines = formatted_transcript.splitlines()
-    formatted_transcript = "\n".join(f"{i+1}: {line}" for i, line in enumerate(lines))
-
-    msg_success = (f"Raw transcript formatted successfully.\n")
-    log_file_write(msg_success, log_path)
-
-    return formatted_transcript
+    except Exception as e:
+        msg_error = (f"Error in formatting transcript - {e}.\nThe raw transcript will be returned without formatting.\n")
+        log_file_write(msg_error, log_path)
+        return raw_transcript
 
 
 def save_transcript(formatted_transcript, audio_file, model_key):
     """Save the formatted transcript to .txt file.
         
     Args:
+        * formatted_transcript (str): If format_transcript() was successful, it provided the formatted transcript with header, newlines, line numbers, word count and delimiters.
+        * formatted_transcript (str): If format_transcript() encountered an error, the variable instead contains the raw transcript as it was transcribed without formatting.
+        audio_file (str): Filename of the currently processing audio file.
+        model_key (str): Key representing the chosen model from model_options dictionary.
+
+    Interactions:
+        check_output_directory() has already been called to ensure that the output directory exists, so any errors here are likely to be system-related.    
+
+    Contingency:
+        If the function encounters an error in the attempt to save the text file     
 
     Returns:
-    
+        bool: True if the transcript was saved successfully, False if the transcript was not saved successfully.
     """
     try:
         alt_name = model_options[model_key]["alt_name"]
         output_filename = f"{os.path.splitext(audio_file)[0]}_{alt_name}.txt"
         # NB: splitext required so that the file extension isn't put in filename
    
-        # Ensure the output directory exists - is this required given check_output_directory has already run?
-        # os.makedirs(path_for_output, exist_ok=True)
-   
         full_path = os.path.join(path_for_output, output_filename)
 
-        # Now open the file for writing
         with open(full_path, "w") as output_file:
             output_file.write(formatted_transcript)
         
-        msg_success = f"{audio_file} processed successfully.\n"
+        msg_success = f"{audio_file} processed successfully and transcript saved to .txt file.\n"
         log_file_write(msg_success, log_path)
         return True
 
     except (FileNotFoundError, PermissionError, OSError, Exception) as e:
-        msg_error = (f"Whisper transcription error - {e}.\n")
+        msg_error = (f"Error attempting to save transcript to txt file - {e}.\nWill attempt to print transcript string to terminal incase it can be manually saved...\n")
+        print(formatted_transcript)
         log_file_write(msg_error, log_path)
         return False
 
-#%% 
+######################### TIDY UP #########################
+
+def move_processed_file(audio_file, path_to_audio, path_for_processed, log_path):
+    """
+    Moves the audio file to the 'processed' directory after transcription. Note, it is perfectly valid for the 'processed' directory to be the same as the 'output' directory. 
+    
+    Args:
+        move_processed (bool): Flag. If True, the file will be moved to the processed directory. If false, the operation will be skipped.
+        audio_file (str): Filename of the currently processing audio file.
+        path_to_audio (str): Path to directory containing the audio files. 
+        path_for_processed (str): Path to directory where processed files are to be moved.
+        log_path (str): Full path of log file to which status messages are written.
+
+    Dependencies:
+        Function relies upon check_processed_directory() to have already  checked for a legitimate filepath and created the directory if required."""
+    if move_processed == False:
+        return False
+
+    # Move the file to the 'processed' directory
+    try:
+        current_file_path = os.path.join(path_to_audio, audio_file)
+        new_file_path = os.path.join(path_for_processed, audio_file)
+
+        # Move the file
+        shutil.move(current_file_path, new_file_path)
+        msg_success = f"File moved from '{current_file_path}' to '{new_file_path}'\n"
+        log_file_write(msg_success, log_path)
+        return True
+    
+    except (FileNotFoundError, PermissionError, RuntimeError, OSError, Exception) as e:
+        msg_error = (f"Error occurred whilst attempting to move {audio_file}\nfrom {current_file_path}\nto {new_file_path}\n: {e}")
+        log_file_write(msg_error, log_path)
+        return False
+
+
+
+
 ######################## CALL SEQUENCE ########################
 
 def master_call_single(word_interval, model_key): 
@@ -445,10 +550,12 @@ def master_call_single(word_interval, model_key):
     check_input_directory, check_output_directory, obtain_audio_filenames, check_model and load_model are all essential, so the program will exit upon failure of any of these functions.
         
     Args:
+        word_interval (int): The user-specified word interval at which to insert newlines into the transcript. Note, that check_word_interval may alter this value (substituting 0 if an invalid interval was entered), so a potentially altered value may be what is passed to master_call_loop().
+        model_key (str): Key representing the chosen model from model_options dictionary.
 
     Returns:
-        audio_filenames (list): List of audio filenames in the batch.
-        model (str): The model name to be used for transcription.
+        audio_filenames (list): List of audio file names in the batch, generated by obtain_audio_filenames()
+        model (str): The Whisper ASR model instance to be used for transcription.
     
     """
     log_file_setup(use_log_file, path_to_logs)
@@ -462,6 +569,23 @@ def master_call_single(word_interval, model_key):
     return audio_filenames, model, word_interval
      
 def master_call_loop(audio_filenames, word_interval, model_key, model):
+    """
+    Sequentially calls the functions which need to run for each audio file in the batch. 
+    
+    Args:
+        audio_filenames (list): List of audio file names in the batch, generated by obtain_audio_filenames()
+        word_interval (int): The user-specified word interval at which to insert newlines into the transcript. Note, that check_word_interval may alter this value (substituting 0 if an invalid interval was entered), so a potentially altered value may be what is passed to master_call_loop().
+        model_key (str): Key representing the chosen model from model_options dictionary.
+        model (str): The Whisper ASR model instance to be used for transcription.
+
+    Contingency:
+        format_transcript() and save_transcript() have contingencies for failure which attempt to preserve and output the original transcript produced by the Whisper model.
+
+    Returns:
+        None. Upon completion of the batch processing, a message is printed to the terminal and written to the log file to indicate that the batch processing has finished
+
+    """
+
     for index, audio_file in enumerate(audio_filenames, start=1):
         header, audio_file = create_header(index, audio_file, delimiter) 
         raw_transcript = transcribe(model, audio_file)
