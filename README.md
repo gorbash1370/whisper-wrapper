@@ -1,7 +1,7 @@
 # whisper_wrapper
 This is a simple implementation of the wonderful [Whisper transcription model from OpenAI](https://github.com/openai/whisper). It is just a wrapper around Whisper and the magic of [ffmpeg](https://ffmpeg.org/); simply a good starting point for anyone who wants to automate the batch transcription of audio files. The code is extremely simple (novice coder) and should be easy for anyone to understand and modify. 
 
-The program automates the supply of single or multiple audio files to OpenAI's whisper transcription model. It calculates the estimated processing time for each file and the batch as a whole, based upon `model_chosen`. It adds in a header and word-count to the transcript. There's an option to add in line numbers + line wrapping (as a pair), and to add a delimiter. (I've supplied a script in [`remove_line_nos.py`](www.github.com/gorbash1370/whisper_wrapper/misc) to quickly remove line-numbers if desired). The program also estimates the time to transcribe the files and gives a cumulative time for the batch. There's extensive logging capability and error handling.
+The program automates the supply of single or multiple audio files to OpenAI's whisper transcription model. It calculates the estimated processing time for each file and the batch as a whole, based upon `model_chosen`. It adds in a header and word-count to the transcript. There's an option to add in line numbers + line wrapping (as a pair), and to add a delimiter. (I've supplied a script in [`remove_line_nos.py`](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/remove_line_nos.py) to quickly remove line-numbers if desired). The program also estimates the time to transcribe the files and gives a cumulative time for the batch. There's extensive logging capability and error handling.
 
 _Because this was developed as a practice Python project, much of it's functionality has been set to my taste, so please read the [Notes Usage](#notes-usage) section carefully._
 
@@ -117,7 +117,7 @@ This is an amateur project built mainly for coding practice, therefore...
 - [ ] Create `test_whisper_transcribe.py` test file
 
 # Licences
-[Licence](https://github.com/gorbash1370/whisper_wrapper/blob/main/LICENSE.md)  
+[Licence](https://github.com/gorbash1370/whisper_wrapper/blob/main/LICENCE.md)  
 [whisperAI Licence](https://github.com/openai/whisper/blob/main/LICENSE)  
 [ffmpeg Licence](https://www.ffmpeg.org/legal.html)  
 
