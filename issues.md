@@ -4,25 +4,32 @@ Jobs to do, Improvements, Bugs, Test Idaes
 # Top Jobs
 
 ## Small
+- [x] put in a finshed message when all transcripts have been processed
+- [ ] create option to specify a path for log files (optional)
+- [ ] 
+- [ ] include a warning if audio_file_info is utilised anywhere within header_parts and the number of dictionaries within audio_file_info does not match the number of strings in the audio_filenames list.
 - [ ]  return statements have been included in most functions as a default. Go through and remove any that aren't necessary.
-- [ ]  Amend series count to include XX of XX
+- [x]  ensure the audio filenames are sorted alphabetically for a consistent order of processing
+- [ ]  ~~Amend series count to include XX of XX~~
 - [x]  Dependencies listed in requirements.txt (TAKE OUT JUPYTER)
 - [ ]  make a list of accepted formats by whisper ffmpeg, in order to check that the audio_format chosen is compatible. This may tie in with being able to accomodate multiple audio file formats in one batch.
 - [ ]  raise an custom error when the no audio files exist of the specified format in the directory
-- [ ]  Test and supply remove_newlines code
+- [ ]  Test and supply remove_linenos.py code
 - [x]  End: remove Jupyter code sections
 
 ## Large
 - [ ] Make a test file
 - [ ] Sanitise inputs for path_to_audio and path_for_transcripts, i.e. catch invalid names
-- [ ] Function to move processed files to a 'processed' directory
+- [x] Function to move processed files to a 'processed' directory
+  - [x] Function to check the processed directory / create
 - [ ] Complete all docstrings, including parameters
 - [ ] Finish Readme file
+- [ ] put example screenshots into the README
 - [ ] Refine Exceptions, splitting out error messages
 - [ ] Ensure that if a single missing or dodgy file doesn't interrupt the whole stream, and that the process will 'skip' to the next file, via good Exception handling flow for FileNotFound or a model error during the transcription.
 
 ## Errors to fix
-- [x] Creation of a log file is essential for the program to run. This isn't necessarily the correct priority - the program should probably run even without a log file. Especially given that error messages are printed to screen as well as being written to log text. Would involve putting an exception around every interaction with log file though! Optionality implemented.
+- [ ]  Realised sanitise_filename will mess up the code if it does actually change the filename: the string representation of the filename which is sent to the transcription model will potentailly not match the actual filename. The function would either have to rename the actual file (this is invasive - people may have reasons to keep the original filename and use special characters etc). Intend to change the santisise_filename to check_filename and just show a warning if the filename is potentially problematic. Tbf could just remove the whole functoin. If the audio file exists in the directory, it must be a valid filename for that user / system.
 
 
 
@@ -31,20 +38,12 @@ Jobs to do, Improvements, Bugs, Test Idaes
 - [ ]  What happens if the date changes during transcription, so it goes from before midnight to afterwards. Does this cause an error regarding the logfilename being datestamped? This might be particularly important if batched processing is implemented.. or will it just create a new logfilename and carry on?
 - [ ]  test if input and output folder are set to the same
 - [ ]  Test with different file formats. Successful file types: mp3, .wav
-- [x]  Test with a video file. mp4 works like a dream!
 - [ ]  Test using manually completed audio_file_info data (i.e. individualised file info)
 - [ ]  no path_for_transcripts
 - [ ]  invalid audio_format
 - [ ]  invalid model
 - [ ]  no path_to_audio
-- [x]  Test with commented out header fields, see if throws error. No error, just omits.
-- [x]  Blank delimiter 
-- [x]  Blank Series & Episode information
-- [x]  blank string word interval. Correctly subsitutes 0.
-- [x]  0 word interval
-- [x]  invalid word interval i.e. four. Tested, substitutes 0 correctly.
-- [x]  invalid path_to_audio. Correct error message displays and exits
-- [x]  invalid path_for_transcripts. Correct error message displays and exits
+
 
 
 ## Later / Maybe One Day
@@ -91,9 +90,19 @@ Jobs to do, Improvements, Bugs, Test Idaes
   - [x]  Add the processing time to give batch cumulative processing time
 
 ## Errors to fix
-
+- [x] Creation of a log file is essential for the program to run. This isn't necessarily the correct priority - the program should probably run even without a log file. Especially given that error messages are printed to screen as well as being written to log text. Would involve putting an exception around every interaction with log file though! Optionality implemented.
 
 ## Tests
-
+- [x]  Test with a video file. mp4 works like a dream!
+- [x]  Test with commented out header fields, see if throws error. No error, just omits.
+- [x]  Blank delimiter 
+- [x]  Blank Series & Episode information
+- [x]  blank string word interval. Correctly subsitutes 0.
+- [x]  0 word interval
+- [x]  invalid word interval i.e. four. Tested, substitutes 0 correctly.
+- [x]  invalid path_to_audio. Correct error message displays and exits
+- [x]  invalid path_for_transcripts. Correct error message displays and exits
 
 ## Larger tasks
+
+

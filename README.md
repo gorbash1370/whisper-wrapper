@@ -1,11 +1,14 @@
 # whisper_wrapper
-This is a simple implementation of the [Whisper transcription model from OpenAI](https://github.com/openai/whisper).
+This is a simple implementation of the wonderful [Whisper transcription model from OpenAI](https://github.com/openai/whisper). It is just a wrapper around Whisper and [ffmpeg](https://ffmpeg.org/); simply a good starting point for anyone who wants to automate the batch transcription of audio files. The code is extremely simple (novice coder) and should be easy for anyone to understand and modify. 
 
 The program automates the supply of single or multiple audio files to a local copy of OpenAI's whisper transcription model. It adds in a header and word-count to the transcript. It optionally adds in line numbers and newline wrapping, and a delimiter. It also estimates the time to transcribe the files and gives a cumulative time for the batch. There's extensive logging capability and error handling.
 
+_Because this was developed as a practice Python project, much of it's functionality has been set to my taste, so please read the [Notes Usage](https://github.com/gorbash1370/whisper_wrapper#Notes_Usage) section carefully._
+
 
 # Dependencies
-See the [Setup section of OpenAI's whisper README](https://github.com/openai/whisper#setup) for the original model and it's dependencies. As their guide describes, you need to install [ffmpeg]((https://ffmpeg.org/)).
+See the [Setup section of OpenAI's whisper README](https://github.com/openai/whisper#setup) for the original model and it's dependencies. As their guide describes, you need to install [ffmpeg](https://ffmpeg.org/).
+I've tried to use as few external libraries as possible.
 
 # Program structure
 `user_variables.py` - user choices and parameters must be specified here
@@ -21,32 +24,59 @@ See the [Setup section of OpenAI's whisper README](https://github.com/openai/whi
 ~~`test_whisper_transcribe.py` - test file~~ (not yet created)
 
 
-# Notes
+# Notes: Installation and Testing
 * At the time of writing (24 02), whisper is compatible with Python versions 3.8-3.11
 * My code has only been tested on .mp3 and .wav files so far.
-* My code was developed with Python 3.11.7 and on a Windows (10) machine. It should work on other OSs but I _haven't tested this_. 
-* Filenames should contain title of podcast or audio track at a minimum. If the filename format is as follows..:  
+* My code was developed with Python 3.11.7 and on a Windows (10) machine. It should work on other OSs but I _haven't tested this_.
+
+# Notes Usage
+
+## File processing order
+The program reads the names of all the files which have an extension matching the `audio_format` variable in `user_variables.py` in the  `path_to_audio` directory. The way Python does this could potentially vary between operating systems, and your File Explorer may be set to display files in a non-standard sort order. Therefore, the program is set to sort the extracted filenames in the `audio_filenames` list alphabetically. This is the order in which they will be transcribed. If you want to change the order of the files, you will need to rename them so that they appear alphabetically sorted in the order you want. This is only relevant if you are manually completing `audio_file_info` dictionaries in `user_variables.py` to manually populate individual transcript headers with unique header values file by file info. See `.4` in `The Header` section below.
+
+## The Header
+At present, **the program inserts a header at the top of the transcript**. The fields can be omitted or populated in the following ways:
+  1. Completely omit the header by commenting out all lines within the `header_parts` section of the `create_header()` function in `whisper_wrapper.py`. The only output will be the transcript with a wordcount. EXAMPLE SCREENSHOT
+  2. Omit some fields by commenting out the relevant lines in the `header_parts` section of the `create_header()` function in `whisper_wrapper.py`. EXAMPLE SCREENSHOT
+  3. Complete the `audio_info_batch` dictionary in `user_variables.py`. Information here will be inserted into the header for _all_ the files processed. Useful for a  batch of files all sharing the same info (i.e. all part of the same Series or Hosted by the same person). Combine with commenting out in `header_parts` any fields you don't want to appear. EXAMPLE SCREENSHOT
+  4. Not recommended: manually complete individual dictionaries within `audio_file_info` dictionary in the `user_variables.py` file for unique file by file info. 
+    #### Considerations: 
+      * This is laborious.
+      * Ensure the number of dictionaries matches the number of files in the input directory.
+      * Start the `index` field from 1 for the first dictionary, 2 for the second, etc.
+      * Ensure the order of the dictionaries matches the order of the files in `audio_filenames` list, which is sorted alphabetically by their original filenames. The is the order Python will process the files in.
+      * Requires manually changing the code in `header_parts` in `create_header()` to point towards the `audio_file_info` dictionary instead of the `audio_info_batch` dictionary. The code to use is in the comments beside the fields in `audio_file_info`.
+      * EXAMPLE SCREENSHOT
+
+## Filenames & the Header
+* Control sections:
+  * `audio_file_info` and `audio_info_batch` are dictionaries in `user_variables.py`.
+  * `header_parts` is a code section in `create_header()` function in `whisper_wrapper.py`
+* Filenames should contain title of the audio track at a minimum. This will populate the `Title:` field in the header.
+* Ideal filename. The program includes a script to extract the series and episode number and title from the filename (to auto-populate the header Series: & Episode: fields), if present in this format `S<any digits> E<any digits>`. For example, if filename format is as follows:  
     `[S]eries[#][E]pisode[#] - Title.audio_format`
-    e.g. `S6E11 - Talking Health and Safety (with Mr Safety).mp3`
-    ...then the program will automatically extract the series and episode number and title from the filename, to put into the header. If the filename does not follow this format, the user can manually enter the series and episode information through the audio_file_info or the audio_info_batch dictionaries in the `user_variables.py` file.
-* With options to complete header fields (file information) either for files as a group or as individualised data, the header info can be as generalised or specific as required - or it can be omitted totally. 
-  * Manually complete the `audio_file_info` dictionary in the `user_variables.py` file for unique file by file info. This is useful for one-off files, or for files which do not follow the standardised filename format.
-  * Or complete the `audio_info_batch` dictionary in the `user_variables.py` file for a group of files. This is useful for files which all share the same info (such as being part of the same Series or Hosted by the same person).
-* Script attempts to process ALL files with the specified extension in the input path directory. It does NOT enumerate or process files in subfolders
-* Script will only process files of one type per pass, currently. So, if your input directory contains both .mp3 and .wav files, you will need to run the script twice, once for each file type (updating audio_format as necessary for each pass).
+    i.e. `S6E11 - Talking Health and Safety (with Mr Safety).mp3`
+    `S6` and `E11` will be extracted and inserted into `Series:` and `Episode:` respectively.
+    If the filename does not follow this format, the user can manually enter the series and episode information through `audio_file_info` or the `audio_info_batch` dictionaries.
+    * If no Series or Episode number is detected, the program will insert "S0" and "E00" into the header. To turn this off, manually comment out these two lines in the `header_parts` section:
+    ```# f"Series#: {series} ",
+       # f"Episode#: {episode} ",```
 
+## Line Numbers and Line Wrapping
+* Control variable: `word_interval` in `user_variables.py`
+* Line wrapping and line numbers are implemented as a package: if the transcript is wrapped, line numbers will also be added into the transcript.
+    *_This is valuable to me for AI processing (saving context, compute, enhancing quality control of AI responses and making AI output verification 10x more reliable). However, line numbers will be an annoyance if you are copying and pasting quotes from the transcript text (line numbers will be scattered throughout)._
+* Line numbers can be easily omitted by setting `word_interval = 0`. Note: this will also prevent line-wrapping.
+* If you want line-wrapping at the word_interval, but want to remove the line numbers, run the script in the Misc folder `remove_linenos.py`. This will remove all the prependeing `##: ` from the transcipt but preserve the newline breaks.
 
-**Because this was developed as a practice Python project, much of it's functionality has been set to my taste, namely**:
-* the program inserts a header into the transcript
-* the header fields were set according to my use-cases. But!, any / all can be easily commented out in the whisper_wrapper.py file, create_header() function.
-* if the transcript is wrapped, line numbers will also be added into the transcript. This is valuable to me for AI processing and quality control of responses. I appreciate this can be annoying if you are copying and pasting quotes from the text though (line numbers scattered throughout). Currently, if you wrap, you get line numbers. 
-
-!! Insert screenshots
-
+## Scope
+* Program only processes files of one type per pass, currently. So, if your input directory contains both .mp3 and .wav files, you will need to run the script twice (updating `audio_format` as necessary), once for each file type.
+* Program attempts to process ALL files with the specified extension in the input path directory. It does NOT enumerate or process files in subfolders
 
 # Start 
 * Install dependencies as mentioned above
 * `pip install -r requirements.txt` - install the required packages
+* Please read the #Notes: Usage section above carefully so you understand some of the quirks of the program
 * `user_variables.py` - complete all the variable values following comment instructions
 * Comment out any unwanted header fields in `whisper_wrapper.py` - `create_header()` function
 * Run the code in `main.py`

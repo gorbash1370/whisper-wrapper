@@ -6,6 +6,7 @@ venv_whisper
 /ignore
 /batch
 /output
+/logs
 
 log*.txt
 development_notes.txt

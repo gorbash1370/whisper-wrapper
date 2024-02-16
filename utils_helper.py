@@ -1,10 +1,11 @@
 from datetime import datetime as dt
 import os
 import re
+import shutil
 import subprocess
-from user_variables import log_file_compulsory
+from user_variables import use_log_file, move_processed
 
-def log_file_write(msg, logfilename):
+def log_file_write(msg, log_path):
     """
     Supplied message is printed to screen and written to the log file, prepended with a timestamp. If log_file_compulsory is set to False, the message is only printed to screen.
 
@@ -16,12 +17,13 @@ def log_file_write(msg, logfilename):
 
     """
     print(msg)
-    if log_file_compulsory == False:
+    if use_log_file == False:
         return
     else:
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         msg_timestamped = f"{formatted_timestamp} - " + msg
-        with open(logfilename, "a") as log_file:
+        # log_path = os.path.join(path_to_logs, logfilename)
+        with open(log_path, "a") as log_file:
             log_file.write(msg_timestamped)
     
 
@@ -169,3 +171,38 @@ def extract_series_episode(
 
     return series, episode
 
+
+def move_processed_file(audio_file, path_to_audio, path_for_processed, logfilename):
+    """
+    Moves the audio file to the 'processed' directory after transcription. Note, it is perfectly valid for the processed directory to be the same as the output directory. 
+    
+    Args:
+        move_processed (bool): Flag. If True, the file will be moved to the processed directory. If false, the operation will be skipped.
+        audio_file (str): Name of audio file. From audio
+        path_to_audio (str): Path to directory containing the audio files.
+        path_for_processed (str): Path to directory where processed files are to be moved.
+        logfilename (str): Name of log file to which status messages are written.
+
+    Dependencies:
+        Function relies upon check_processed_directory() to have already  checked for a legitimate filepath and created the directory if required."""
+    if move_processed == False:
+        return False
+
+    # Move the file to the 'processed' directory
+    try:
+        current_file_path = os.path.join(path_to_audio, audio_file)
+        new_file_path = os.path.join(path_for_processed, audio_file)
+
+        # Move the file
+        shutil.move(current_file_path, new_file_path)
+        msg_success = f"File {audio_file} moved from {current_file_path}\nto {new_file_path}\n"
+        log_file_write(msg_success, logfilename)
+        return True
+    
+    except (FileNotFoundError, PermissionError, RuntimeError, OSError, Exception) as e:
+        msg_error = (f"Error occurred whilst attempting to move {audio_file}\nfrom {current_file_path}\nto {new_file_path}\n: {e}")
+        log_file_write(msg_error, logfilename)
+        return False
+
+
+#print(f"Audio file looks like this: {audio_file})") # remove after testing
