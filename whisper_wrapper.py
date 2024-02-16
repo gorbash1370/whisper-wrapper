@@ -1,3 +1,5 @@
+"""MAIN UTILITIES"""
+
 import os
 import time
 from datetime import datetime as dt
@@ -6,7 +8,7 @@ import sys
 
 from user_variables import use_log_file, path_to_logs, path_to_audio, path_for_output, path_for_processed, audio_format, model_options, audio_info_batch, audio_file_info, delimiter
 
-from utils_helper import log_file_write, sanitize_filename, audio_file_durations, process_time_estimator, extract_series_episode, move_processed_file
+from utils_helper import log_file_write, audio_file_durations, process_time_estimator, extract_series_episode, move_processed_file
 
 log_path = "" # Instanciates global variable
 audio_filenames = []
@@ -270,7 +272,7 @@ def load_model(model_key):
 
 
 ########################## HEADER ################################
-def create_header(audio_info_batch, index, audio_file, delimiter):
+def create_header(index, audio_file, delimiter):
     """Constructs a header for the transcript file. Simply comment out any header fields that aren't required.
     
     Args:
@@ -279,24 +281,23 @@ def create_header(audio_info_batch, index, audio_file, delimiter):
         audio_file (str): Filename of audio file.
         delimiter (str): Delimiter inserted at start and end of transcript.
     
-    Returns: # CHECK THIS
-        tuple: A tuple containing the constructed header (str) and the sanitized audio file name."""    
+    Returns:
+        tuple: A tuple containing the constructed header (str) and the audio file name (str)."""    
 
     try:
-        audio_file = sanitize_filename(audio_file) # removes any potentially problematic characters from the filename
+        # Extract series and episode numbers from filename where possible     
+        series, episode = extract_series_episode(audio_file, log_path)
         
-        series, episode = extract_series_episode(audio_file)
-        # construct individualised header for each file
-
-        # Create speaker strings
+        # Create speaker strings (from individual audio_file_info)
         speaker_strings = [f"Speaker: {speaker['name']} - {speaker['role']}" for speaker in audio_file_info[index-1]['speakers']]
         
+        # Create participant strings (from audio_batch_info)
         participant_strings = [f"Participant: {participant['name']} - {participant['role']}" for participant in audio_info_batch[0]['participants']]
 
         header_parts = [
-        delimiter, # delimiter for AI processing
+        delimiter, # delimiter useful for AI processing
         f"Filename: {audio_file}",
-        f"Content creation date: {audio_file_info[index-1]['date']}",
+        f"Content date: {audio_info_batch[1]['audio_content'][4]['date']}",
         f"Series: {audio_info_batch[1]['audio_content'][2]['series']}",
         f"Series#: {series} ",
         f"Episode#: {episode} ",
@@ -307,7 +308,7 @@ def create_header(audio_info_batch, index, audio_file, delimiter):
         # *speaker_strings,
         f"Transcription Producer: {audio_info_batch[2]['transcript_type'][0]['producer']}",
         f"Transcription Model: {audio_info_batch[2]['transcript_type'][1]['model']}",
-        f"Series Batch process order: {index}"
+        f"Batch process order: {index}"
         ]
         header = "\n".join(header_parts) + "\n\n"
         
@@ -427,7 +428,7 @@ def save_transcript(formatted_transcript, audio_file, model_key):
         with open(full_path, "w") as output_file:
             output_file.write(formatted_transcript)
         
-        msg_success = f"{audio_file} processed successfully.\n\n"
+        msg_success = f"{audio_file} processed successfully.\n"
         log_file_write(msg_success, log_path)
         return True
 
@@ -447,8 +448,7 @@ def master_call_single(word_interval, model_key):
 
     Returns:
         audio_filenames (list): List of audio filenames in the batch.
-        model: The model name to be used for transcription.
-
+        model (str): The model name to be used for transcription.
     
     """
     log_file_setup(use_log_file, path_to_logs)
@@ -463,11 +463,11 @@ def master_call_single(word_interval, model_key):
      
 def master_call_loop(audio_filenames, word_interval, model_key, model):
     for index, audio_file in enumerate(audio_filenames, start=1):
-        header, audio_file = create_header(audio_info_batch, index, audio_file, delimiter) 
+        header, audio_file = create_header(index, audio_file, delimiter) 
         raw_transcript = transcribe(model, audio_file)
         formatted_transcript = format_transcript(raw_transcript, word_interval, header, delimiter)
         save_transcript(formatted_transcript, audio_file, model_key)
         move_processed_file(audio_file, path_to_audio, path_for_processed, log_path)
-    msg_finished = f"Transcription of {audio_filenames} finished. This is not confirmation that all files were transcribed without issue: check log file and print statements to see if any individual files encountered errors.\n"
+    msg_finished = f"Transcription of {audio_filenames} finished. This is not confirmation that all files were transcribed without issue: check log file and print statements to see if any individual files encountered errors.\n\n"
     log_file_write(msg_finished, log_path)
 

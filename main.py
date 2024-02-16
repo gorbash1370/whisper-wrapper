@@ -1,4 +1,4 @@
-""" Entry point for whisper_wrapper.py """
+""" ENTRY POINT """
 
 from whisper_wrapper import master_call_single, master_call_loop
 from user_variables import model_key, word_interval
