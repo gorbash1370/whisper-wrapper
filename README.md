@@ -53,9 +53,9 @@ The program reads the names of all the files in the `path_to_audio` directory wh
 ## The Header
 The program inserts a header at the top of the transcript. The header and it's fields can be omitted or populated in the following ways:
   1. Completely omit the header by commenting out all lines within the `header_parts`.  [Screenshot](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/screenshot_commented_out_header.PNG)  
-  In this case, the only output will be the only the [transcript with a wordcount](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/screenshot_no_header.png)
+  In this case, the only output will be the only the [transcript](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/screenshot_no_header.png) with a wordcount.
   2. Omit some fields by commenting out the relevant lines in `header_parts`.
-  3. Complete the `audio_info_batch` dictionary in `user_variables.py`. Information here will be inserted into the header for _all_ the files processed. Useful for a batch of files all sharing the same info (i.e. all the same Series or Hosted by the same person). Combine with commenting out in `header_parts` any fields you don't want to appear. [Screenshot](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/screenshot_audio_info_batch_dict.PNG)
+  3. Complete the `audio_info_batch` dictionary in `user_variables.py`. [Screenshot](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/screenshot_audio_info_batch_dict.PNG) Information here will be inserted into the header for _all_ the files processed. Useful for a batch of files all sharing the same info (i.e. all the same Series or Hosted by the same person). Combine with commenting out in `header_parts` any fields you don't want to appear. 
   4. Not recommended: manually complete individual dictionaries within `audio_file_info` dictionary in the `user_variables.py` file for unique file by file info. [Screenshot](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/screenshot_audio_file_info_dict.PNG)
     
   #### Considerations regarding `audio_file_info` dictionary use: 
@@ -68,25 +68,30 @@ The program inserts a header at the top of the transcript. The header and it's f
 ## Filenames & the Header
 * Filenames should contain title of the audio track at a minimum. This will auto-populate the `Title:` field in the header.
 * Ideal filename: The program includes a script to extract the series and episode number from the filename (to auto-populate the header `Series:` and `Episode:` fields), if present in this format `S<any digits> E<any digits>`. For example, if filename format is as follows:  
+  
     `[S]eries[#][E]pisode[#] - Title.audio_format`  
     i.e. `S6E11 - Talking Health and Safety (with Mr Safety).mp3`  
     or `S6 E11 - Talking Health and Safety (with Mr Safety).mp3`  
+
     `S6` and `E11` will be extracted and inserted into `Series:` and `Episode:` respectively.
     If the filename does not follow this format, the user can manually enter the series and episode information through `audio_file_info` dictionaries, set a default value in `extract_series_episode()` in `utils_helper.py` or set a consistent series number in the `audio_info_batch` dictionary.
-  * If no Series or Episode number is detected, the program will insert "S0" and "E00" into the header. To turn this off, manually comment out these two lines in the `header_parts` section:  
+
+    If no Series or Episode number is detected, the program will insert "S0" and "E00" into the header. To turn this off, manually comment out these two lines in the `header_parts` section:  
   `# f"Series#: {series} ",`  
   `# f"Episode#: {episode} ",`
 
 ## Line Numbers and Line Wrapping
 * Control variable: `word_interval` in `user_variables.py`
 * Line wrapping and line numbers are implemented as a package: if the transcript is wrapped, line numbers will also be added into the transcript.  
-    _This is valuable for AI processing (saving context, compute, enhancing quality control of AI responses and making AI output verification a million times more reliable). However, line numbers will be an annoyance if you are copying and pasting quotes from the transcript text (line numbers will be scattered throughout)._
+
+    _This is valuable for AI processing (saving context, compute, enhancing quality control of AI responses and making AI output verification a million times more reliable). However, line numbers will be an annoyance if you are copying and pasting quotes from the transcript text (line numbers will be scattered throughout)._  
+
 * Line numbers can be easily omitted by setting `word_interval = 0`. Note: this will also prevent line-wrapping.
 * If you want line-wrapping at the word_interval, but want to remove the line numbers, use word_interval as usual. Then, run the `remove_line_nos.py` script in `/misc` on your transcripts (in bulk). This will remove all the prependeing `##: ` from all the transcipts but preserve the newline breaks.
 
 ## Scope
 * Program only processes files of one type per pass, currently. So, if your input directory contains both .mp3 and .wav files, you will need to run the script twice (updating `audio_format` as necessary), once for each file type.
-* Program attempts to process _ALL_ files with the specified extension in the input path directory. It does NOT enumerate or process files in subfolders
+* Program attempts to process _ALL_ files with the specified extension in the input path directory. It does *not* enumerate or process files in subfolders.
 
 ## Output Customisation
 * `use_log_file` - use this variable to turn on/off the logging of the program's output to a file.
@@ -95,7 +100,7 @@ The program inserts a header at the top of the transcript. The header and it's f
 * `move_processed` and `path_for_processed` - specify if / where you want the audio files to be moved to a different directory after processing.
 * `model_options` - specify which OpenAI Whisper model you want to use for the transcription.
 * `delimiter` - customise the delimiter or omit by supplying an empty string `""`
-* `word interval` - customise the word interval for line wrapping and line numbers. See [##Line Numbers and Line Wrapping Section](#line-numbers-and-line-wrapping) above.
+* `word interval` - customise the word interval for line wrapping and line numbers. See [#Line Numbers and Line Wrapping section](#line-numbers-and-line-wrapping) above.
 * `header_parts` in `create_header` - customise the header fields: see [#The Header section](#the-header) above.
 
 
