@@ -1,12 +1,12 @@
 """MAIN UTILITIES"""
-
-import os
-import time
 from datetime import datetime as dt
-import whisper
+import os
+import shutil
 import sys
+import time
+import whisper
 
-from user_variables import use_log_file, path_to_logs, path_to_audio, path_for_output, path_for_processed, audio_format, model_options, audio_info_batch, audio_file_info, delimiter
+from user_variables import use_log_file, path_to_logs, path_to_audio, path_for_output, move_processed, path_for_processed, audio_format, model_options, audio_info_batch, audio_file_info, delimiter
 
 from utils_helper import log_file_write, audio_file_durations, process_time_estimator, extract_series_episode, insert_newlines
 
@@ -354,8 +354,17 @@ def create_header(index, audio_file, delimiter):
         series, episode = extract_series_episode(audio_file, log_path)
         
         # Create speaker strings (from individual audio_file_info)
-        speaker_strings = [f"Speaker: {speaker['name']} - {speaker['role']}" for speaker in audio_file_info[index-1]['speakers']]
-        
+        try:
+            if index-1 < len(audio_file_info):
+                speaker_strings = [f"Speaker: {speaker['name']} - {speaker['role']}" for speaker in audio_file_info[index-1]['speakers']]
+            else:
+                speaker_strings = ["Error"]
+                
+        except IndexError as e:
+            msg_error = (f"Error in constructing information from audio_file_info dictionary. It is likely that the number of dictionaries and the number of files are not matched - {e}.\n")
+            log_file_write(msg_error, log_path)
+            speaker_strings = ["Error"]
+            
         # Create participant strings (from audio_batch_info)
         participant_strings = [f"Participant: {participant['name']} - {participant['role']}" for participant in audio_info_batch[0]['participants']]
 
@@ -364,8 +373,8 @@ def create_header(index, audio_file, delimiter):
         f"Filename: {audio_file}",
         f"Content date: {audio_info_batch[1]['audio_content'][4]['date']}",
         f"Series: {audio_info_batch[1]['audio_content'][2]['series']}",
-        f"Series#: {series} ",
-        f"Episode#: {episode} ",
+        f"Series#: {series}",
+        f"Episode#: E0{index}", # should be {episode}
         f"Format: {audio_info_batch[1]['audio_content'][3]['format']}", 
         f"Topic: {audio_info_batch[1]['audio_content'][1]['topic']}",
         f"Type: {audio_info_batch[1]['audio_content'][0]['type']}",
@@ -385,6 +394,8 @@ def create_header(index, audio_file, delimiter):
     except (TypeError, KeyError, IndexError, ValueError, Exception) as e:
         msg_error = (f"Header construction error - {e}.\n")
         log_file_write(msg_error, log_path)
+        # Return a default value when an exception is caught
+        return "Error constructing header", audio_file
 
 
 ######################### TRANSCRIPTION ######################### 
@@ -508,7 +519,7 @@ def save_transcript(formatted_transcript, audio_file, model_key):
 
 ######################### TIDY UP #########################
 
-def move_processed_file(audio_file, path_to_audio, path_for_processed, log_path):
+def move_processed_file(move_processed, audio_file, path_to_audio, path_for_processed, log_path):
     """
     Moves the audio file to the 'processed' directory after transcription. Note, it is perfectly valid for the 'processed' directory to be the same as the 'output' directory. 
     
@@ -539,9 +550,6 @@ def move_processed_file(audio_file, path_to_audio, path_for_processed, log_path)
         msg_error = (f"Error occurred whilst attempting to move {audio_file}\nfrom {current_file_path}\nto {new_file_path}\n: {e}")
         log_file_write(msg_error, log_path)
         return False
-
-
-
 
 ######################## CALL SEQUENCE ########################
 
@@ -582,8 +590,7 @@ def master_call_loop(audio_filenames, word_interval, model_key, model):
         format_transcript() and save_transcript() have contingencies for failure which attempt to preserve and output the original transcript produced by the Whisper model.
 
     Returns:
-        None. Upon completion of the batch processing, a message is printed to the terminal and written to the log file to indicate that the batch processing has finished
-
+        None. Upon completion of the batch processing, a message is printed to the terminal and written to the log file to indicate that the batch processing has finished.
     """
 
     for index, audio_file in enumerate(audio_filenames, start=1):
@@ -591,7 +598,7 @@ def master_call_loop(audio_filenames, word_interval, model_key, model):
         raw_transcript = transcribe(model, audio_file)
         formatted_transcript = format_transcript(raw_transcript, word_interval, header, delimiter)
         save_transcript(formatted_transcript, audio_file, model_key)
-        move_processed_file(audio_file, path_to_audio, path_for_processed, log_path)
+        move_processed_file(move_processed, audio_file, path_to_audio, path_for_processed, log_path)
     msg_finished = f"Transcription of {audio_filenames} finished. This is not confirmation that all files were transcribed without issue: check log file and print statements to see if any individual files encountered errors.\n\n"
     log_file_write(msg_finished, log_path)
 

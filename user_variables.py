@@ -43,7 +43,7 @@ path_for_processed = "output/"
 - only one file type at a time can be processed
 - include the . and make sure the case matches the actual file extension:
 ".wav" will not match if the files are ".WAV" """
-audio_format = ".mp3" # Note: 
+audio_format = ".mp4" # Note: 
 
 
 """Choose the Whisper transcription model"""
@@ -64,7 +64,7 @@ model_options = {
 """ 
 - Supply the dictionary key ("Tiny_English"), NOT the model name ("tiny.en")
 - See print statements (each file) / log entry (file batch) produced by process_time_estimator() for processing time estimations."""
-model_key = "Base_English" # spelling must match exactly. 
+model_key = "Medium_English" # spelling must match exactly. 
 
 
 """ Choose word interval for line wrapping and to insert line-numbers into the final transcript.
@@ -73,7 +73,7 @@ model_key = "Base_English" # spelling must match exactly.
 - Enter 0 to return the raw transcript with no line wrapping and no line numbers
 - If an invalid interval is entered, 0 will be substituted.
 - ! Important note: choosing in interval will not just wrap the lines, but will insert a line number at the start of each line in the format XX: (i.e. 12:). If you don't want line numbers, set the word interval to 0."""
-word_interval = 0  # approx 9 - 12 is English average
+word_interval = 10  # approx 9 - 12 is English average
 
 
 """Choose a delimiter for transcript. 
@@ -92,17 +92,17 @@ Fill in any string fields which are the same for all audio files in the batch.""
 audio_info_batch = [
     {
         "participants" : [
-        {"name": "Evan Davis", "role": "Host"},
-        {"name": "Spongebob Squarepants", "role": "Employment Expert"},
+        {"name": "Andrew Ng", "role": "Host"},
+        {"name": "Unknown", "role": "LangChain"},
         ]
     },
     {
         "audio_content" : [
-        {"type" : "Talk Show"}, # "talk", "interview", "QandA"
-        {"topic" : "Employment & Business"}, # e.g. "Health and Safety", "Business", "Economics"
-        {"series" : "BBC Radio 4 The Bottom Line"}, # e.g. "BBC The Bottom Line"
-        {"format" : "Podcast audio"}, # e.g. "Podcast", "YouTube"
-        {"date" : "2024-02-08"} # most content will be date unique, and so this field is likely to need to be commented out in create_header() in whisper_wrapper.py
+        {"type" : "AI Course"}, # "talk", "interview", "QandA"
+        {"topic" : "AI, LLM"}, # e.g. "Health and Safety", "Business", "Economics"
+        {"series" : "DLAI LangChain Chat With Your Data"}, # e.g. "BBC The Bottom Line"
+        {"format" : "DLAI Course Video"}, # e.g. "Podcast", "YouTube"
+        {"date" : "2023-08"} # most content will be date unique, and so this field is likely to need to be commented out in create_header() in whisper_wrapper.py
         ] 
     },
     {

@@ -3,9 +3,9 @@
 from datetime import datetime as dt
 import os
 import re
-import shutil
+
 import subprocess
-from user_variables import use_log_file, move_processed
+from user_variables import use_log_file
 
 def log_file_write(msg, log_path):
     """
@@ -53,10 +53,8 @@ def audio_file_durations(path_to_audio, audio_filenames, log_path):
         dict: Dictionary containing filename (key) and the duration in seconds(value) of each audio file. This data is then used in process_time_estimator() to calculate the time required to process the batch, relative to the model's processing speed.
     """
     
-    print(f"raw filenames are: {audio_filenames}") # remove after testing
     audio_time_dict = dict.fromkeys(audio_filenames, 0)
-    print(f"Dictionary looks like: {audio_time_dict}") # remove after testing
-
+    
     for filename in audio_filenames:
         full_path = os.path.join(path_to_audio, filename)
         cmd = f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "{full_path}"'
@@ -206,6 +204,3 @@ def insert_newlines(text, word_interval):
     except ValueError as e:
         print(f"ValueError: {e}")
         raise
-
-
-
