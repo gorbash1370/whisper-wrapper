@@ -115,7 +115,7 @@ Values here will be inserted into the headers for _all_ the files processed. Com
     _This is valuable for AI processing (saving context, compute, enhancing quality control of AI responses and making AI output verification a million times more reliable). However, line numbers will be an annoyance if you are copying and pasting quotes from the transcript text (line numbers will be scattered throughout)._  
 
 * Line numbers can be easily omitted by setting `word_interval = 0`. Note: this will also prevent line-wrapping:  
-[![Screenshot Word Interval](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_linenos_annot_small.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_linenos_annot.png)
+[![Screenshot Word Interval](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_linenos_small.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_linenos_annot.png)
 
 * If you want line-wrapping at the word_interval, but want to remove the line numbers, use `word_interval` as usual. Then, run the `remove_line_nos.py` script on your .txt transcripts (in bulk). This will remove all the prependeing `##: ` from all the transcipts but preserve the newline breaks.
 
