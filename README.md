@@ -66,10 +66,11 @@ _This was a practice Python project created for my practical use, so much of its
 
 ## The Header
 The program inserts a header at the top of the transcript. The header and its fields can be omitted or populated in the following ways:
-1. Completely omit the header by commenting out all lines within `header_parts`:  [![Screenshot No Header](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_commented_out_header_thumb.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_commented_out_header.png)  
+1. Completely omit the header by commenting out all lines within `header_parts`:  
+   [![Screenshot No Header](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_commented_out_header_thumb.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_commented_out_header.png)  
   
-In this case, the only output will be the only the unformatted transcript with a wordcount, like this:
-[![Screenshot Unformatted Transcript](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_header_small.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_header_annot.png) 
+   In this case, the only output will be the only the unformatted transcript with a wordcount, like this:  
+   [![Screenshot Unformatted Transcript](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_header_small.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_header_annot.png) 
 
 2. Omit _some_ fields by commenting out just the relevant lines in `header_parts`.
 
