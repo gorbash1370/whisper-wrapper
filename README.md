@@ -22,7 +22,9 @@ _This was a practice Python project created for my practical use, so much of it'
 # Dependencies
 * See the [Setup section of OpenAI's whisper README](https://github.com/openai/whisper#setup) for the original model and it's dependencies. Mostly, it involves running `pip install -U openai-whisper`, but please do read their instructions.
 * As their guide describes, Whisper utilises the 'powerhouse' of [ffmpeg](https://ffmpeg.org/) so that needs to be installed.
-* I've tried to use as few external libraries as possible.
+* There is no requirements.txt because the code only uses the libraries which are required/installed as part of the Whisper installation or are standard Python libraries.
+* If, like me, you're already on Python 3.12, you'll need to install Python 3.11 and then run  
+`/full/path/to/your/python3.11.exe -m venv /path/to/new/virtual/environment` to create your virtual environment.
 
 # Program structure
 `user_variables.py` - user choices and parameters must be specified here  
@@ -33,7 +35,6 @@ _This was a practice Python project created for my practical use, so much of it'
 # Other files
 `README.md` - voila!  
 `LICENCE.md` - lgpl-3.0 licence  
-`requirements.txt` - list of dependencies for pip install
 
 `issues.md` - casual project To Do list (see `misc/` folder)  
 `remove_line_nos.py` - script to remove line numbers from the transcript, if you want to keep the newlines but remove the line numbers (see `misc/` folder)  
@@ -47,15 +48,13 @@ _This was a practice Python project created for my practical use, so much of it'
 
 # Start 
 * Install dependencies as mentioned above
-* `pip install -r requirements.txt` - install the required packages
-* Read the [#Notes: Usage](#notes-usage) section carefully so you understand some of the quirks of the program
-* `user_variables.py` - complete all the variable values following comment instructions
-* Comment out any unwanted header fields in `whisper_wrapper.py` - `create_header()` function
+* Read the [#Notes: Usage](#notes-usage) section carefully so you understand the program quirks
+* `user_variables.py` - complete all the variable values following the instructions in the comments
+* Comment out any unwanted header fields in `whisper_wrapper.py`, `create_header()` function
 * Run the code in `main.py`
 
 
 # Notes: Usage
-
 
 ## Codesections Referenced:
   * `audio_file_info` and `audio_info_batch` are dictionaries in `user_variables.py`.
