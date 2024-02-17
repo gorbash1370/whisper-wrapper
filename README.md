@@ -1,24 +1,38 @@
 # whisper_wrapper
-This is a simple implementation of the wonderful [Whisper transcription model from OpenAI](https://github.com/openai/whisper). It is just a wrapper around Whisper and the magic of [ffmpeg](https://ffmpeg.org/); simply a good starting point for anyone who wants to automate the batch transcription of audio files. The code is extremely simple (novice coder) and should be easy for anyone to understand and modify. 
+## Intro
+This program is a simple implementation of the wonderful [Whisper transcription model from OpenAI](https://github.com/openai/whisper), designed to automate the batch transcription of audio files and throwing in some extra formatting features along the way, before saving output as a .txt file. 
 
-The program automates the supply of single or multiple audio files to OpenAI's whisper transcription model. It calculates the estimated processing time for each file and the batch as a whole, based upon `model_chosen`. It adds in a header and word-count to the transcript. There's an option to add in line numbers + line wrapping (as a pair), and to add a delimiter. (I've supplied a script in [`remove_line_nos.py`](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/remove_line_nos.py) to quickly remove line-numbers if desired). The program also estimates the time to transcribe the files and gives a cumulative time for the batch. There's extensive logging capability and error handling.
+The program is a 'wrapper' around the core Whisper transcription functionality. The code is extremely simple (novice coder) and should be easy for coders of all proficiencies to understand and modify. Simply set a few variables to customise how the finished transcript will be formatted, point the script at a directory containing your audio files, and off it goes. 🐱‍🏍
 
-_Because this was developed as a practice Python project, much of it's functionality has been set to my taste, so please read the [Notes Usage](#notes-usage) section carefully._
+![Here's a Sample Transcript](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_header_linenos_ann.png)
+
+My fellow AI/LLM geeks 🤓 will spot the purpose of the formatting features offered. The program:
+* adds in a header containing information about the file / content
+* adds in word-count
+* optionally adds in line numbers + line wrapping (as a pair)
+* optionally adds a delimiter
+
+Additionally:
+* It calculates the estimated processing time for each file and the batch as a whole, based upon `model_chosen`.
+* There's extensive logging capability (optional) and error handling.
+* I've supplied a script [`remove_line_nos.py`](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/remove_line_nos.py) to quickly remove line-numbers from the .txt file if desired. 
+
+_This was a practice Python project created for my practical use, so much of it's functionality has been set to my taste. Therefore, please read the [Notes Usage](#notes-usage) section carefully for how to set it's parameters to match your workflow. I've built in as much variability as I had time to, before I had to escape from this particular The Code Cave_
 
 # Dependencies
-See the [Setup section of OpenAI's whisper README](https://github.com/openai/whisper#setup) for the original model and it's dependencies.
-As their guide describes, you need to install [ffmpeg](https://ffmpeg.org/).
-I've tried to use as few external libraries as possible.
+* See the [Setup section of OpenAI's whisper README](https://github.com/openai/whisper#setup) for the original model and it's dependencies. Mostly, it involves running `pip install -U openai-whisper`, but please do read their instructions.
+* As their guide describes, Whisper utilises the 'powerhouse' of [ffmpeg](https://ffmpeg.org/) so that needs to be installed.
+* I've tried to use as few external libraries as possible.
 
 # Program structure
 `user_variables.py` - user choices and parameters must be specified here  
 `utils_helper.py` - helper functions  
-`whisper_wrapper.py` - utility functions. Unwanted header fields can be manually commented out in the `create_header()` function (explained below).  
+`whisper_wrapper.py` - utility functions. Unwanted header fields can be manually commented out in the create_header() function (explained below).  
 `main.py` - executions the program
 
 # Other files
 `README.md` - voila!  
-`LICENCE.md` - lgpl-3.0 licence information  
+`LICENCE.md` - lgpl-3.0 licence  
 `requirements.txt` - list of dependencies for pip install
 
 `issues.md` - casual project To Do list (see `misc/` folder)  
@@ -28,6 +42,7 @@ I've tried to use as few external libraries as possible.
 * At the time of writing (24 02), OpenAi's Whisper is compatible with Python versions 3.8-3.11
 * My code has only been tested on .mp3, .wav and .mp4 files so far.
 * My code was developed with Python 3.11.7 and on a Windows (10) machine. It should work on other OSs but I _have not tested this_.
+* I built the code as robustly as I could, but **I have not had chance to do extensive testing**. Please do let me know what errors you find and I'll do my best to fix them.
 
 
 # Start 
@@ -40,30 +55,35 @@ I've tried to use as few external libraries as possible.
 
 
 # Notes: Usage
-![Sample Transcript](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/screenshot_sample_transcript_header_linenos.PNG)
+
 
 ## Codesections Referenced:
   * `audio_file_info` and `audio_info_batch` are dictionaries in `user_variables.py`.
   * `header_parts` is a code section in `create_header()` function in `whisper_wrapper.py`
 
 ## File processing order
-The program reads the names of all the files in the `path_to_audio` directory which have an extension matching the `audio_format` variable (set in `user_variables.py`). The way/order in which Python adds the filenames to the resulting list could potentially vary between operating systems, and your File Explorer may be set to display files in a non-standard sort order. Therefore, the program is set to sort the extracted filenames in the `audio_filenames` list alphabetically. This is the order in which they will be transcribed. If you want to change the transcription order of the files, you will need to rename them so that they appear alphabetically sorted in the order you want. This is only relevant if you are manually completing `audio_file_info` dictionaries in `user_variables.py` to populate individual transcript headers with unique values file by file. See [`.4`](#considerations-regarding-audio_file_info-dictionary-use) in #The Header section below.
+The program reads the names of all files in the `path_to_audio` directory which have an extension matching the `audio_format` variable (set in `user_variables.py`). The way/order in which Python adds the filenames to the resulting list could potentially vary between operating systems, and your File Explorer may be set to display files in a non-standard sort order. Therefore, the program is set to sort the extracted filenames in the `audio_filenames` list alphabetically. This is the order in which they will be transcribed.  
+
+If you want to change the transcription order of the files, you will need to rename them so that they appear alphabetically sorted in the order you want. This is only relevant if you are manually completing `audio_file_info` dictionaries in `user_variables.py` to populate individual transcript headers with unique values file by file. See [`.4`](#considerations-regarding-audio_file_info-dictionary-use) in #The Header section below.
 
 
 ## The Header
 The program inserts a header at the top of the transcript. The header and it's fields can be omitted or populated in the following ways:
-  1. Completely omit the header by commenting out all lines within the `header_parts`.  [Screenshot](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/screenshot_commented_out_header.PNG)  
-  In this case, the only output will be the only the [transcript](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/screenshot_no_header.png) with a wordcount.
+  1. Completely omit the header by commenting out all lines within `header_parts`.  [![Screenshot](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_commented_out_header_thumb.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_commented_out_header.png)  
+  In this case, the only output will be the only the unformatted transcript with a wordcount.  
+  [![unformatted transcript](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_linenos_small.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_header_annot.png) 
   2. Omit some fields by commenting out the relevant lines in `header_parts`.
-  3. Complete the `audio_info_batch` dictionary in `user_variables.py`. [Screenshot](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/screenshot_audio_info_batch_dict.PNG) Information here will be inserted into the header for _all_ the files processed. Useful for a batch of files all sharing the same info (i.e. all the same Series or Hosted by the same person). Combine with commenting out in `header_parts` any fields you don't want to appear. 
-  4. Not recommended: manually complete individual dictionaries within `audio_file_info` dictionary in the `user_variables.py` file for unique file by file info. [Screenshot](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/screenshot_audio_file_info_dict.PNG)
+  3. To 'group-set' header fields which are the same for all the files (i.e. all the same Series or Hosted by the same person) complete the `audio_info_batch` dictionary.  
+  [![Screenshot](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_audio_info_batch_dict_thumb.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_audio_info_batch_dict.png)  
+  Values here will be inserted into the headers for _all_ the files processed. Combine with commenting out in `header_parts` any fields you don't want to appear. 
+  4. **Not recommended**: manually complete individual dictionaries within `audio_file_info` for unique file by file info. [![Screenshot](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_audio_file_info_dict_thumb.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_audio_file_info_dict.png)
     
-  #### Considerations regarding `audio_file_info` dictionary use: 
-  * This method is laborious.
-  * Ensure the number of dictionaries matches the number of files in the input directory, else the program will throw an error.
-  * Start the `index` field from 1 for the first dictionary, 2 for the second, etc.
-  * Ensure the order of the dictionaries matches the order of the files in `audio_filenames` list, which is sorted alphabetically by their original filenames. The is the order Python will process the files in.
-  * Using this dictionary will require manually changing the code in `header_parts` in `create_header()` to point towards the `audio_file_info` dictionary instead of the `audio_info_batch` dictionary (latter used as default). The code to use to switch references is in the comments beside the dictionary entries in `audio_file_info`.
+      #### Considerations regarding `audio_file_info` dictionary use: 
+      * This method is laborious.
+      * Ensure the number of dictionaries matches the number of files in the input directory, else the program will throw an error.
+      * Start the `index` field from 1 for the first dictionary, 2 for the second, etc.
+      * Ensure the order of the dictionaries matches the order of the files in `audio_filenames` list, which is sorted alphabetically by their original filenames. The is the order Python will process the files in.
+      * Using this dictionary will require manually changing the code in `header_parts` in `create_header()` to point towards the `audio_file_info` dictionary instead of the `audio_info_batch` dictionary (latter used as default). The code to use to switch references is in the comments beside the dictionary entries in `audio_file_info`.
 
 ## Filenames & the Header
 * Filenames should contain title of the audio track at a minimum. This will auto-populate the `Title:` field in the header.
@@ -114,6 +134,7 @@ This is an amateur project built mainly for coding practice, therefore...
 # Improvements (Bigger Ones) on the To Do List
 - [ ] Accommodate processing of all audio files in the directory, rather than having to specify a single type/file extension.
 - [ ] Create an input 'terminal' prompt for the user to enter the program user choices. This would be a more user-friendly way to input the variable values.
+- [ ] Add a function which extracts a date from the filename (if present0 and inserts it into the header.
 - [ ] Create `test_whisper_transcribe.py` test file
 
 # Licences
