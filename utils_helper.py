@@ -27,7 +27,7 @@ def log_file_write(msg, log_path):
     else:
         formatted_timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         msg_timestamped = f"{formatted_timestamp} - " + msg
-        with open(log_path, "a") as log_file:
+        with open(log_path, "a", encoding="utf-8") as log_file:
             log_file.write(msg_timestamped)
     
 

@@ -66,7 +66,7 @@ def log_file_setup(use_log_file, path_to_logs):
             return True
         if not os.path.exists(log_path):
             os.makedirs(path_to_logs, exist_ok=True)
-            with open(log_path, 'a'):
+            with open(log_path, 'a', encoding="utf-8"):
                 pass
             msg_success = ("Log File Setup - Successful.\n")
             log_file_write(msg_success, log_path)
@@ -504,7 +504,7 @@ def save_transcript(formatted_transcript, audio_file, model_key):
    
         full_path = os.path.join(path_for_output, output_filename)
 
-        with open(full_path, "w") as output_file:
+        with open(full_path, "w", encoding="utf-8") as output_file:
             output_file.write(formatted_transcript)
         
         msg_success = f"{audio_file} processed successfully and transcript saved to .txt file.\n"
