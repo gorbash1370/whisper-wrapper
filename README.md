@@ -1,4 +1,4 @@
-# whisper_wrapper
+# whisper-wrapper
 ## Intro
 This program is a simple implementation of the wonderful ✨[Whisper transcription model from OpenAI](https://github.com/openai/whisper). 
 
@@ -6,7 +6,7 @@ It's purpose is to automate the batch transcription of audio files whilst throwi
 
 The program is a 'wrapper' around the core Whisper transcription functionality. The code is extremely simple (novice programmer) and should be easy for those of all coding proficiencies to understand and modify. Simply set a few variables to customise how the finished transcript will be formatted, point the script at a directory containing your audio files, and off it goes.🐱‍🏍
 
-[![Screenshot Sample Transcript annot](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_header_linenos_ann_small.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_header_linenos_ann.png)
+[![Screenshot Sample Transcript annot](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/ss_trans_header_linenos_ann_small.png)](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/ss_trans_header_linenos_ann.png)
 
 My fellow AI/LLM geeks 🤓 will spot the purpose of the formatting features offered. The program:
 * adds in a header containing information about the file / content
@@ -17,7 +17,7 @@ My fellow AI/LLM geeks 🤓 will spot the purpose of the formatting features off
 Additionally:
 * It calculates the estimated processing time for each file and the batch as a whole, based upon `model_chosen`.
 * There's extensive logging capability (optional) and error handling.
-* I've supplied a script [`remove_line_nos.py`](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/remove_line_nos.py) to quickly remove line-numbers from a batch of .txt files, if desired. 
+* I've supplied a script [`remove_line_nos.py`](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/remove_line_nos.py) to quickly remove line-numbers from a batch of .txt files, if desired. 
 
 _This was a practice Python project created for my practical use, so much of its functionality has been set to my taste. Therefore, please read the [Notes Usage](#notes-usage) section carefully for how to set its parameters to match your workflow. I built in as much variability as time would allow, before I had to re-emerge from The Code Cave this project led me into._
 
@@ -28,17 +28,17 @@ _This was a practice Python project created for my practical use, so much of its
 
 
 # Program structure
-[`user_variables.py`](https://github.com/gorbash1370/whisper_wrapper/blob/main/user_variables.py) - user choices and parameters must be specified here  
-[`utils_helper.py`](https://github.com/gorbash1370/whisper_wrapper/blob/main/utils_helper.py) - helper functions  
-[`whisper_wrapper.py`](https://github.com/gorbash1370/whisper_wrapper/blob/main/whisper_wrapper.py) - utility functions. Unwanted header fields can be manually commented out in the create_header() function (explained below).  
-[`main.py`](https://github.com/gorbash1370/whisper_wrapper/blob/main/main.py) - executions the program
+[`user_variables.py`](https://github.com/gorbash1370/whisper-wrapper/blob/main/user_variables.py) - user choices and parameters must be specified here  
+[`utils_helper.py`](https://github.com/gorbash1370/whisper-wrapper/blob/main/utils_helper.py) - helper functions  
+[`whisper_wrapper.py`](https://github.com/gorbash1370/whisper-wrapper/blob/main/whisper_wrapper.py) - utility functions. Unwanted header fields can be manually commented out in the create_header() function (explained below).  
+[`main.py`](https://github.com/gorbash1370/whisper-wrapper/blob/main/main.py) - executes the program
 
 # Other files
-[`README.md`](https://github.com/gorbash1370/whisper_wrapper/blob/main/README.md) - voila!  
-[`LICENCE.md`](https://github.com/gorbash1370/whisper_wrapper/blob/main/LICENCE.md) - lgpl-3.0 licence  
-
-`issues.md` - casual project To Do list (in [`misc/`](https://github.com/gorbash1370/whisper_wrapper/tree/main/misc) folder)  
-[`remove_line_nos.py`](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/remove_line_nos.py) - script to remove line numbers from the transcript, if you want to keep the newlines but remove the line numbers (in [`misc/`](https://github.com/gorbash1370/whisper_wrapper/tree/main/misc) folder)  
+[`README.md`](https://github.com/gorbash1370/whisper-wrapper/blob/main/README.md) - voila!
+[`LICENCE.md`](https://github.com/gorbash1370/whisper-wrapper/blob/main/LICENCE.md) - lgpl-3.0 licence  
+[`requirements.txt`](/requirements.txt)
+`issues.md` - casual project To Do list (in [`misc/`](https://github.com/gorbash1370/whisper-wrapper/tree/main/misc) folder)  
+[`remove_line_nos.py`](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/remove_line_nos.py) - script to remove line numbers from the transcript, if you want to keep the newlines but remove the line numbers (in [`misc/`](https://github.com/gorbash1370/whisper-wrapper/tree/main/misc) folder)  
 
 # Notes: Installation and Testing
 * At the time of writing (24 02), OpenAi's Whisper is compatible with Python versions 3.8-3.11. 
@@ -67,19 +67,19 @@ _This was a practice Python project created for my practical use, so much of its
 ## The Header
 The program inserts a header at the top of the transcript. The header and its fields can be omitted or populated in the following ways:
 1. Completely omit the header by commenting out all lines within `header_parts`:  
-   [![Screenshot No Header](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_commented_out_header_thumb.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_commented_out_header.png)  
+   [![Screenshot No Header](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/ss_code_commented_out_header_thumb.png)](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/ss_code_commented_out_header.png)  
   
    In this case, the only output will be the only the unformatted transcript with a wordcount, like this:  
-   [![Screenshot Unformatted Transcript](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_header_small.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_header_annot.png) 
+   [![Screenshot Unformatted Transcript](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/ss_trans_no_header_small.png)](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/ss_trans_no_header_annot.png) 
 
 2. Omit _some_ fields by commenting out just the relevant lines in `header_parts`.
 
 3. To 'group-set' header fields which are the same for all the files (i.e. all the same Series or Hosted by the same person) complete the `audio_info_batch` dictionary.  
-[![Screenshot Batch Dictionaries](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_audio_info_batch_dict_thumb.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_audio_info_batch_dict.png)  
+[![Screenshot Batch Dictionaries](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/ss_code_audio_info_batch_dict_thumb.png)](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/ss_code_audio_info_batch_dict.png)  
 Values here will be inserted into the headers for _all_ the files processed. Combine with commenting out in `header_parts` any fields you don't want to appear.  
 
 4. **Not recommended**: manually complete individual dictionaries within `audio_file_info` to set unique file-by-file info.  
-[![Screenshot Individual Dictionaries](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_audio_file_info_dict_thumb.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_code_audio_file_info_dict.png)
+[![Screenshot Individual Dictionaries](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/ss_code_audio_file_info_dict_thumb.png)](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/ss_code_audio_file_info_dict.png)
 
     
     #### Considerations regarding `audio_file_info` dictionary use: 
@@ -115,7 +115,7 @@ Values here will be inserted into the headers for _all_ the files processed. Com
     _This is valuable for AI processing (saving context, compute, enhancing quality control of AI responses and making AI output verification a million times more reliable). However, line numbers will be an annoyance if you are copying and pasting quotes from the transcript text (line numbers will be scattered throughout)._  
 
 * Line numbers can be easily omitted by setting `word_interval = 0`. Note: this will also prevent line-wrapping:  
-[![Screenshot Word Interval](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_linenos_small.png)](https://github.com/gorbash1370/whisper_wrapper/blob/main/misc/ss_trans_no_linenos_annot.png)
+[![Screenshot Word Interval](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/ss_trans_no_linenos_small.png)](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/ss_trans_no_linenos_annot.png)
 
 * If you want line-wrapping at the word_interval, but want to remove the line numbers, use `word_interval` as usual. Then, run the `remove_line_nos.py` script on your .txt transcripts (in bulk). This will remove all the prependeing `##: ` from all the transcipts but preserve the newline breaks.
 
@@ -153,7 +153,7 @@ This is an amateur project built mainly for coding practice, therefore...
 - [ ] Create `test_whisper_transcribe.py` test file
 
 # Licences
-[Licence](https://github.com/gorbash1370/whisper_wrapper/blob/main/LICENCE.md)  
+[Licence](https://github.com/gorbash1370/whisper-wrapper/blob/main/LICENCE.md)  
 [whisperAI Licence](https://github.com/openai/whisper/blob/main/LICENSE)  
 [ffmpeg Licence](https://www.ffmpeg.org/legal.html)  
 
