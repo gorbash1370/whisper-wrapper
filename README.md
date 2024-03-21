@@ -36,7 +36,7 @@ _This was a practice Python project created for my practical use, so much of its
 # Other files
 [`README.md`](https://github.com/gorbash1370/whisper-wrapper/blob/main/README.md) - voila!
 [`LICENCE.md`](https://github.com/gorbash1370/whisper-wrapper/blob/main/LICENCE.md) - lgpl-3.0 licence  
-[`requirements.txt`](/requirements.txt)
+[`requirements.txt`](/requirements.txt)  
 `issues.md` - casual project To Do list (in [`misc/`](https://github.com/gorbash1370/whisper-wrapper/tree/main/misc) folder)  
 [`remove_line_nos.py`](https://github.com/gorbash1370/whisper-wrapper/blob/main/misc/remove_line_nos.py) - script to remove line numbers from the transcript, if you want to keep the newlines but remove the line numbers (in [`misc/`](https://github.com/gorbash1370/whisper-wrapper/tree/main/misc) folder)  
 
